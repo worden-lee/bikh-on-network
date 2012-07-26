@@ -1,15 +1,29 @@
 // -*- C++ -*-
-#ifndef __network_experiment_parameters_h__
-#define __network_experiment_parameters_h__
+#ifndef __cascade_parameters_h__
+#define __cascade_parameters_h__
 #include "Parameters.h"
 #include <boost/random.hpp>
 
-class NetworkExperimentParameters : public Parameters
+class CascadeParameters : public Parameters
 {
 public:
   // ===== declarations of parameters =====
 
-  // --- all are declared in Parameters
+	// what kind of structure - lattice, network, global
+	DECLARE_PARAM(string, initial_graph_type)
+
+	// dimension of lattice
+	DECLARE_PARAM(unsigned, lattice_dimensions)
+
+	// size of lattice.  lattice_dim0, lattice_dim1, etc can be used,
+	// if not found this one is used
+	DECLARE_PARAM(unsigned, lattice_dim_generic)
+
+	// extent of neighborhood - first neighbors, second, ...
+	DECLARE_PARAM(unsigned, neighbor_depth)
+
+  // whether coordinates wrap around edges
+  DECLARE_PARAM(bool, lattice_is_torus)
 
 };
 
@@ -23,4 +37,4 @@ extern rng_t rng;
 typedef boost::variate_generator<rng_t&, boost::uniform_int<> >  ui_t;
 typedef boost::variate_generator<rng_t&, boost::uniform_real<> > ur_t;
 
-#endif // __network_experiment_parameters_h__
+#endif // __cascade_parameters_h__
