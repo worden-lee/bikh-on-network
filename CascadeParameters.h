@@ -15,7 +15,7 @@ public:
 	// dimension of lattice
 	DECLARE_PARAM(unsigned, lattice_dimensions)
 
-	// size of lattice.  lattice_dim0, lattice_dim1, etc can be used,
+	// size of lattice.  lattice_dim_0, lattice_dim_1, etc can be used,
 	// if not found this one is used
 	DECLARE_PARAM(unsigned, lattice_dim_generic)
 
@@ -25,13 +25,28 @@ public:
   // whether coordinates wrap around edges
   DECLARE_PARAM(bool, lattice_is_torus)
 
+	// probability that a given individual's private signal is accurate
+	DECLARE_PARAM(double, p)
+
+	void finishInitialize()
+	{ if (initial_graph_type() == "LATTICE" && n_vertices() == 0)
+		{ int nv = 1;
+			for (int i = lattice_dimensions() - 1; i >= 0; --i)
+			{ const string *ds = get(string("lattice_dim_")+fstring("%u",i));
+				if (!ds) ds = get("lattice_dim_generic");
+				nv *= string_to_unsigned(*ds);
+			}
+		  setn_vertices(nv);
+		}
+		Parameters::finishInitialize();
+	}
 };
 
 // -----------------------------------------
 
 // global random number generator, used throughout
 typedef boost::minstd_rand rng_t;
-extern rng_t rng;
+//typedef boost::mt19937 rng_t;
 
 // use these types to actually get random numbers
 typedef boost::variate_generator<rng_t&, boost::uniform_int<> >  ui_t;

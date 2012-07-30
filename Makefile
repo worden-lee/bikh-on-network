@@ -13,31 +13,42 @@ CFLAGS+=-O3
 endif
 
 #default: swarming
-default: simulation
+default: bikhitron
 
 over: clean default
-
-SRCS = simulation.cpp
-_OINT = $(SRCS:.cpp=.o)
-OBJS = $(_OINT:.c=.o)
 
 NETDYNLIB = $(NETDYNDIR)/libnet-dyn.a
 
 $(NETDYNLIB) : /proc/uptime
 	$(MAKE) -C $(NETDYNDIR)
 
-SIMOBJ = simulation.o
-simulation : $(SIMOBJ) $(NETDYNLIB)
-	$(CXX) $(CFLAGS) $< $(LDFLAGS) -o $@
+SIMOBJS = bikhitron.o
+bikhitron : $(SIMOBJS) $(NETDYNLIB)
+	$(CXX) $(CFLAGS) $(SIMOBJS) $(LDFLAGS) -o $@
+
+# to make animation from bikhitron microstate data
+%.out/microstate.000000.frame.png : %.out/microstate.csv lattice-animation.py
+	python -m memory_profiler lattice-animation.py $*.out/microstate.csv
+
+%.out/microstate.animation.gif : %.out/microstate.000000.frame.png
+	convert -adjoin -delay 10 $*.out/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
+
+#	$(RM) $*/microstate.*.frame.png
+
+%.out/microstate.csv : %.settings ./bikhitron
+	./bikhitron --outputDirectory=$*.out -f $<
+
+.PRECIOUS: %.out/microstate.000000.frame.png %.out/microstate.csv %.out
 
 # fancy GNU-style line for tracking header dependencies in .P files
-%.o : %.cpp
+%.o : %.c++
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -save-temps -MD -c $< -o $@
 	@cp $*.d $*.P; \
 	    sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	        -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
 	    rm -f $*.d $*.s $*.ii
 
+OBJS = $(SIMOBJS)
 DEPS = $(OBJS:.o=.P)
 
 -include $(DEPS)
@@ -51,6 +62,6 @@ clear:
 %.eps : %.dot
 	neato -Goverlap=scale -Gsplines=true -Tps -o $@ $<
 
-# when network.dot is changed to network~2~
-%~.eps : %~
-	neato -Goverlap=scale -Gsplines=true -Tps -o $@ $<
+%.open : %
+	open $<
+.PHONY : %.open

@@ -1,3 +1,2 @@
-n_vertices 100
-lattice_dim0 10
-
+lattice_dim_0 100
+lattice_dim_1 100
