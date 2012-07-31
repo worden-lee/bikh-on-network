@@ -38,7 +38,18 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %.out/microstate.csv : %.settings ./bikhitron
 	./bikhitron --outputDirectory=$*.out -f $<
 
-.PRECIOUS: %.out/microstate.000000.frame.png %.out/microstate.csv %.out
+.PRECIOUS: %.out %.out/microstate.000000.frame.png %.out/microstate.csv %.out/microstate.animation.gif
+
+# batch simulations
+
+batch-data/%/summary.csv : batch.pl bikhitron
+	./batch.pl
+
+batch-data/summaries.csv :
+	sed -n -e 1p -e /^0/p batch-data/*/*/*/summary.csv > $@
+
+batch-data/summaries.png : batch-data/summaries.csv
+	python batch-plots.py $<
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++

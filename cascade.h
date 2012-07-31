@@ -37,6 +37,14 @@ public:
 					++n;
 			return n;
 		}
+		unsigned n_cascading(void) {
+			unsigned n = 0;
+			for (typename vector<node_state_t>::iterator it = this->begin(); 
+						it != this->end(); ++it)
+				if (it->decided && it->cascaded)
+					++n;
+			return n;
+		}
 		unsigned n_decided(void) {
 			unsigned n = 0;
 			for (typename vector<node_state_t>::iterator it = this->begin(); 
@@ -287,5 +295,14 @@ void do_cascade(network_t &n, params_t &parameters, rng_t &rng_arg)
 			break;
 		cascade_dynamics.step();
 	}
+
+	CSVDisplay summary_csv(parameters.outputDirectory()+"/summary.csv");
+	summary_csv << "p" << "proportion adopting" << "proportion cascading" << endl;
+	summary_csv << parameters.p()
+		<< (cascade_dynamics.state().n_adopting() /
+				 (double)cascade_dynamics.state().n_decided())
+		<< (cascade_dynamics.state().n_cascading() /
+				 (double)cascade_dynamics.state().n_decided())
+		<< endl;
 }
 
