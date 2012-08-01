@@ -43,6 +43,7 @@ def make_plot(csv_file):
 		for p, rows in groupby(zip(cols['p'], cols['proportion adopting']),
 				lambda pair: pair[0]))
 	pr = zip(*(sorted(pairs, key = lambda pair: pair[0])))
+	print pr
 	summaries_filename = csv_file.rstrip("csv") + "png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
