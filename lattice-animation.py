@@ -28,6 +28,15 @@ filenameslist.sort()
 
 number_of_txtfiles = len(filenameslist)
  
+def save_frame(data, filename_base, frame_number):
+	frame_filename = filename_base + "%06g.frame.png"%float(frame_number)
+	if ( not os.path.exists(frame_filename) ):
+		print frame_filename
+		fig = plt.figure(figsize=(4,4))
+		plt.subplot(111)
+		plt.imshow(data, interpolation="nearest")
+		fig.savefig(frame_filename)
+
 def make_frames(csv_file):
 	settings_file = csv_file.rstrip("microstate.csv")+"settings.csv"
 	settings = dict(csv.reader(open(settings_file)))
@@ -64,21 +73,16 @@ def make_frames(csv_file):
 	for row in csvreader:
 		#if float(row['t']) > 300:
 		#	break
+		if float(row['t']) >= next_frame_t:
+			save_frame(X, txt_file.rstrip("csv"), next_frame_t)
+			next_frame_t = next_frame_t + 1
 		X[row['x'],row['y'],:] = color(
 				int(row['decided']), 
 				int(row['adopted']), 
 				int(row['cascaded']),
 				int(row['flipped']))
 		#print row, X[row['x'],row['y'],:]
-		if float(row['t']) >= next_frame_t:
-			frame_filename = txt_file.rstrip("csv") + "%06g.frame.png"%float(row['t'])
-			if ( not os.path.exists(frame_filename) ):
-				print frame_filename
-				fig = plt.figure(figsize=(4,4))
-				plt.subplot(111)
-				plt.imshow(X, interpolation="nearest")
-				fig.savefig(frame_filename)
-			++next_frame_t
+	save_frame(X, txt_file.rstrip("csv"), next_frame_t)
 
 for txt_file in filenameslist:
 	make_frames(txt_file)
