@@ -42,8 +42,6 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %.out/microstate.animation.gif : %.out/microstate.000000.frame.png
 	convert -adjoin -delay 10 $*.out/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
 
-#	$(RM) $*/microstate.*.frame.png
-
 %.out/microstate.csv : %.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings.defaults-cascade.settings
 	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
 	$(RM) $*.out/*.frame.png
@@ -52,14 +50,17 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # batch simulations
 
-batch-data/%/summary.csv : batch.pl bikhitron
-	./batch.pl
+batch-data/%/summary.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
+	$(BIKHDIR)/batch.pl
 
-batch-data/summaries.csv :
+batch-data/summaries.csv : batch-data/10x10/out.1/summary.csv
 	sed -n -e 1p -e /^0/p batch-data/*/*/*/summary.csv > $@
 
 batch-data/summaries.png : batch-data/summaries.csv
 	python batch-plots.py $<
+
+batch-data :
+	mkdir $@
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++
