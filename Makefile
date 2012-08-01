@@ -57,7 +57,7 @@ batch-data/summaries.csv : batch-data/10x10/out.1/summary.csv
 	sed -n -e 1p -e /^0/p batch-data/*/*/*/summary.csv > $@
 
 batch-data/summaries.png : batch-data/summaries.csv
-	python batch-plots.py $<
+	python $(BIKHDIR)/batch-plots.py $<
 
 batch-data :
 	mkdir $@
