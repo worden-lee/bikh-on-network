@@ -25,16 +25,30 @@ filenameslist.sort()
 #print filenameslist
 
 def make_plot(csv_file):
-	csvreader = csv.DictReader(open(csv_file,'r'))
+	csvreader = csv.reader(open(csv_file,'r'))
 	rows = (csvreader)
+	cols = zip(*csvreader)
+	cols = dict((c[0],c[1:]) for c in cols)
+	def float_if_possible(x):
+		try:
+			return float(x)
+		except ValueError:
+			return x
+	for k,v in cols.items():
+		cols[k] = [float_if_possible(x) for x in v]
+	means = {}
+	def mean(list):
+		return sum(list) / len(list)
+	pr = zip(*((p,mean([pair[1] for pair in rows])) 
+		for p, rows in groupby(zip(cols['p'], cols['proportion adopting']),
+				lambda pair: pair[0])))
 	summaries_filename = csv_file.rstrip("csv") + "png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	plt.plot( (float(row['p']) for row in rows), 
-			(float(row['proportion adopting']) for row in rows), 'r,') 
+	#plt.plot( cols['p'], cols['proportion adopting'], 'r,') 
+	plt.plot( pr[0], pr[1], 'r-' )
 	fig.savefig(summaries_filename);
-	++next_frame_t
 
 for csv_file in filenameslist:
 	make_plot(csv_file)

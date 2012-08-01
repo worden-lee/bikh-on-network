@@ -28,7 +28,6 @@ filenameslist.sort()
 
 number_of_txtfiles = len(filenameslist)
  
-@profile
 def make_frames(csv_file):
 	settings_file = csv_file.rstrip("microstate.csv")+"settings.csv"
 	settings = dict(csv.reader(open(settings_file)))
@@ -50,16 +49,16 @@ def make_frames(csv_file):
 			if cascaded:
 				return [1,0.7,0.7]
 			elif flipped:
-				return [1,0.4,0.4]
+				return [1,0.3,0.3]
 			else:
 				return [1,0,0]
 		else:
 			if cascaded:
-				return [0.7,0.7,0.7]
+				return [0.7,0.7,1]
 			elif flipped:
-				return [0.4,0.4,0.4]
+				return [0.3,0.3,1]
 			else:
-				return [0,0,0]
+				return [0,0,1]
 	X = ones( (int(settings['lattice_dim_0']),int(settings['lattice_dim_1']),3), float )
 	next_frame_t = 0
 	for row in csvreader:
@@ -70,7 +69,7 @@ def make_frames(csv_file):
 				int(row['adopted']), 
 				int(row['cascaded']),
 				int(row['flipped']))
-		print row, X[row['x'],row['y'],:]
+		#print row, X[row['x'],row['y'],:]
 		if float(row['t']) >= next_frame_t:
 			frame_filename = txt_file.rstrip("csv") + "%06g.frame.png"%float(row['t'])
 			if ( not os.path.exists(frame_filename) ):
@@ -78,7 +77,7 @@ def make_frames(csv_file):
 				fig = plt.figure(figsize=(4,4))
 				plt.subplot(111)
 				plt.imshow(X, interpolation="nearest")
-				fig.savefig(frame_filename);
+				fig.savefig(frame_filename)
 			++next_frame_t
 
 for txt_file in filenameslist:

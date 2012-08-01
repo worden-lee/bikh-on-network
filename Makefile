@@ -28,7 +28,10 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # to make animation from bikhitron microstate data
 %.out/microstate.000000.frame.png : %.out/microstate.csv lattice-animation.py
-	python -m memory_profiler lattice-animation.py $*.out/microstate.csv
+	python lattice-animation.py $*.out/microstate.csv
+
+%.out/microstate.animation.mpg : %.out/microstate.000000.frame.png
+	mencoder mf://$*.out/microstate.*.frame.png -mf type=png:w=800:h=400:fps=20 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o $*.out/microstate.animation.mpg
 
 %.out/microstate.animation.gif : %.out/microstate.000000.frame.png
 	convert -adjoin -delay 10 $*.out/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
@@ -38,7 +41,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %.out/microstate.csv : %.settings ./bikhitron
 	./bikhitron --outputDirectory=$*.out -f $<
 
-.PRECIOUS: %.out %.out/microstate.000000.frame.png %.out/microstate.csv %.out/microstate.animation.gif
+.PRECIOUS: %.out %.out/microstate.000000.frame.png %.out/microstate.csv %.out/microstate.animation.gif %.out/microstate.animation.mpg
 
 # batch simulations
 
