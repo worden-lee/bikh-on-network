@@ -48,7 +48,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
 	$(RM) $*.out/*.frame.png
 
-.PRECIOUS: $(BIKHDIR)/bikhitron %.out %.out/microstate.csv %.out/microstate.000000.frame.png %.out/microstate.animation.gif %.out/microstate.animation.mpg %.out/microstate.animation.ogv
+.PRECIOUS: $(BIKHDIR)/bikhitron %.out %.out/microstate.csv %.out/microstate.animation.gif %.out/microstate.animation.mpg %.out/microstate.animation.ogv
 
 # batch simulations
 
