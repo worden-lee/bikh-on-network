@@ -34,7 +34,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	python $(BIKHDIR)/lattice-animation.py $*.out/microstate.csv
 
 %.out/microstate.animation.ogv : %.out/microstate.animation.mpg
-	ffmpeg -i $< -vcodec libtheora $@
+	ffmpeg -i $< -y -vcodec libtheora $@
 
 %.out/microstate.animation.mpg : %.out/microstate.000000.frame.png
 	mencoder mf://$*.out/microstate.*.frame.png -mf type=png:w=800:h=400:fps=20 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o $*.out/microstate.animation.mpg
