@@ -46,7 +46,7 @@ def make_plot(csv_file):
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	#plt.plot( cols['p'], cols['proportion adopting'], 'r,') 
+	plt.plot( pr[0], pr[0], 'k,' )
 	plt.plot( pr[0], pr[1], 'r-' )
 	fig.savefig(summaries_filename);
 

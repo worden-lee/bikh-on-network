@@ -3,7 +3,7 @@ use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use File::Basename;
 
-my $reps = 100;
+my $reps = 1000;
 my @prange = (0.5,1);
 my $pstep = 0.01;
 
@@ -30,7 +30,8 @@ print "@explist\n";
 for my $i (1 .. $reps)
 { for my $p (@plist)
     { my @extra_args = ("p=$p");
-      my($catdir) = "$outdir/".join(".",@extra_args);
+			my @extra_dirs = ("p_$p");
+      my($catdir) = "$outdir/".join(".",@extra_dirs);
       my($dest) = "$catdir/out.$i";
       next if (-e $dest);
       if (!-e "out") { mkdir("out") or die "couldn't mkdir out"; }
