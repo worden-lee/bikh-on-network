@@ -44,7 +44,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 #	$(RM) $*/microstate.*.frame.png
 
-%.out/microstate.csv : %.settings $(BIKHDIR)/bikhitron
+%.out/microstate.csv : %.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings.defaults-cascade.settings
 	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
 	$(RM) $*.out/*.frame.png
 
