@@ -3,7 +3,7 @@ lattice_dimensions 2
 lattice_dim_0 10
 lattice_dim_1 10
 
-p 0.7
+p 0.55
 
 print_stuff 1
 print_adjacency_matrix 1
