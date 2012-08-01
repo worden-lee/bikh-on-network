@@ -39,9 +39,10 @@ def make_plot(csv_file):
 	means = {}
 	def mean(list):
 		return sum(list) / len(list)
-	pr = zip(*((p,mean([pair[1] for pair in rows])) 
+	pairs = ((p,mean([pair[1] for pair in rows])) 
 		for p, rows in groupby(zip(cols['p'], cols['proportion adopting']),
-				lambda pair: pair[0])))
+				lambda pair: pair[0]))
+	pr = zip(*(sorted(pairs, key = lambda pair: pair[0])))
 	summaries_filename = csv_file.rstrip("csv") + "png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
