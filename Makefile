@@ -63,8 +63,9 @@ batch-data/summaries.csv : batch-data
 batch-data/summaries.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
-batch-data :
-	mkdir $@
+# need to leave this out
+#batch-data :
+#	mkdir $@
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++
