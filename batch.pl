@@ -40,7 +40,7 @@ for my $i (1 .. $reps)
 				my $dirname = join("/",@extra_dirs);
 				my($catdir) = "$outdir/".$dirname;
 				my($dest) = "$catdir/out.$i";
-				print BATCHCSV, "$dirname,$experiment,$nb,$p\n";
+				print BATCHCSV "$dirname,$experiment,$nb,$p\n";
 				next if (-e $dest);
 				if (!-e "out") { mkdir("out") or die "couldn't mkdir out"; }
 				system("rm -rf out/*");
