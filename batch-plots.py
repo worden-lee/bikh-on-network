@@ -61,7 +61,7 @@ def make_plot(csv_file):
 					label="size %d, %d neighbors"%(n,nb) )
 			c_index = c_index + 1
 	plt.plot( pr[0], pr[0], 'k,' )
-	plt.legend()
+	plt.legend(loc="upper left", prop={"size":8})
 	fig.savefig(summaries_filename);
 
 for csv_file in filenameslist:
