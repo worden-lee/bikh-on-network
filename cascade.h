@@ -297,8 +297,9 @@ void do_cascade(network_t &n, params_t &parameters, rng_t &rng_arg)
 	}
 
 	CSVDisplay summary_csv(parameters.outputDirectory()+"/summary.csv");
-	summary_csv << "p" << "proportion adopting" << "proportion cascading" << endl;
-	summary_csv << parameters.p()
+	summary_csv << "p" << "neighbors" << "population size"
+		<< "proportion adopting" << "proportion cascading" << endl;
+	summary_csv << parameters.p() << parameters.n_neighbors() << num_vertices(n)
 		<< (cascade_dynamics.state().n_adopting() /
 				 (double)cascade_dynamics.state().n_decided())
 		<< (cascade_dynamics.state().n_cascading() /

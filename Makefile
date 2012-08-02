@@ -57,8 +57,8 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 batch-data/%/summary.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
 	$(BIKHDIR)/batch.pl
 
-batch-data/summaries.csv : batch-data/10x10/p_0.5/out.1/summary.csv
-	sed -n -e 1p -e /^0/p batch-data/*/*/*/summary.csv > $@
+batch-data/summaries.csv : batch-data
+	sed -n -e 1p -e /^0/p `find batch-data -name summary.csv` > $@
 
 batch-data/summaries.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
