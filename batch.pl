@@ -21,6 +21,10 @@ my @experiments = ("50x50");
 my $batchdir = "$pwd/batch-data";
 my $outdir = "$batchdir";
 
+my $batchcsv = "$batchdir/batch.csv";
+open BATCHCSV, ">$batchcsv" or die "opening $batchcsv for writing";
+print BATCHCSV "name,experiment,neighbors,p\n";
+
 if (!-e $outdir)
 { mkpath($outdir) or die "couldn't create $outdir";
 }
@@ -33,8 +37,10 @@ for my $i (1 .. $reps)
 		{ for my $experiment (@experiments)
 			{ my @extra_args = ("n_neighbors=$nb","p=$p");
 				my @extra_dirs = ($experiment,"n_neighbors_$nb","p_$p");
-				my($catdir) = "$outdir/".join("/",@extra_dirs);
+				my $dirname = join("/",@extra_dirs);
+				my($catdir) = "$outdir/".$dirname;
 				my($dest) = "$catdir/out.$i";
+				print BATCHCSV, "$dirname,$experiment,$nb,$p\n";
 				next if (-e $dest);
 				if (!-e "out") { mkdir("out") or die "couldn't mkdir out"; }
 				system("rm -rf out/*");

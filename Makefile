@@ -54,18 +54,17 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # batch simulations
 
-batch-data/%/summary.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
+batch-data/batch.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
 	$(BIKHDIR)/batch.pl
 
-batch-data/summaries.csv : batch-data
+batch-data/summaries.csv : batch-data/batch.csv
 	sed -n -e 1p -e /^0/p `find batch-data -name summary.csv` > $@
 
 batch-data/summaries.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
-# need to leave this out
-#batch-data :
-#	mkdir $@
+batch-data :
+	mkdir $@
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++
