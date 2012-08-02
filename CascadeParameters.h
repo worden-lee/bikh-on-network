@@ -20,7 +20,7 @@ public:
 	DECLARE_PARAM(unsigned, lattice_dim_generic)
 
 	// extent of neighborhood - first neighbors, second, ...
-	DECLARE_PARAM(unsigned, neighbor_depth)
+	DECLARE_PARAM(unsigned, n_neighbors)
 
   // whether coordinates wrap around edges
   DECLARE_PARAM(bool, lattice_is_torus)

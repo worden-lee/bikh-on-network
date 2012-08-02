@@ -29,7 +29,12 @@ SIMOBJS = bikhitron.o
 bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(CXX) $(CFLAGS) $(SIMOBJS) $(LDFLAGS) -o $@
 
-# to make animation from bikhitron microstate data
+# run the simulation
+%.out/microstate.csv : $(BIKHDIR)/settings/%.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings/defaults-cascade.settings
+	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
+	$(RM) $*.out/*.frame.png
+	
+# make animation from bikhitron microstate data
 %.out/microstate.000000.frame.png : %.out/microstate.csv $(BIKHDIR)/lattice-animation.py
 	python $(BIKHDIR)/lattice-animation.py $*.out/microstate.csv
 
@@ -42,9 +47,8 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %.out/microstate.animation.gif : %.out/microstate.000000.frame.png
 	convert -adjoin -delay 10 $*.out/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
 
-%.out/microstate.csv : %.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings.defaults-cascade.settings
-	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
-	$(RM) $*.out/*.frame.png
+%.out :
+	mkdir $@
 
 .PRECIOUS: $(BIKHDIR)/bikhitron %.out %.out/microstate.csv %.out/microstate.animation.gif %.out/microstate.animation.mpg %.out/microstate.animation.ogv
 
