@@ -147,6 +147,15 @@ public:
 	approximate_inference_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
 
+	class compare_times
+	{ public:
+		  const state_container_t &state;
+			compare_times(const state_container_t&s) : state(s) {}
+			bool operator()(const vertex_index_t &a, const vertex_index_t &b)
+			{ return state[a].time_of_decision < state[b].time_of_decision;
+			}
+	};
+
 	virtual void figure_out_update(vertex_index_t i, bool signal,
 		 network_t &n, state_container_t &state)
 	{ typename graph_traits<network_t>::out_edge_iterator ei,eend;
@@ -161,32 +170,70 @@ public:
 		}
 		unsigned n_up = 0, n_down = 0;
 		// reconstruct everyone's decisions and try to infer their signals
+
+		// get everyone in the neighborhood, from first to play, to last
 		typename graph_traits<network_t>::adjacency_iterator ai,aend;
-		typedef subgraph<network_t> neighborhood_t;
-		neighborhood_t i_nhood = n.create_subgraph();
-		for (tie(ai,aend) = adjacent_vertices(i, n); ai != aend; ++ai)
-			add_vertex(*ai, i_nhood);
+		tie(ai,aend) = adjacent_vertices(i, n);
+		vector<vertex_index_t> neighbors( ai, aend );
+		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
+		vector<float> inferred_signals( neighbors.size(), 0./0. );
+		// in order, try to infer their signal from what they were looking at
+		float total_influence = 0;
+		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
+			if (state[neighbors[n1]].decided)
+			{ // what were they looking at?
+				float sum_influence = 0;
+				for ( unsigned n2 = 0; n2 < n1; ++n2 )
+				  if (state[neighbors[n2]].decided)
+					{ typename boost::graph_traits<network_t>::edge_descriptor e;
+						bool edge_exists;
+						tie(e, edge_exists) = edge(neighbors[n1],neighbors[n2],n);
+						if (edge_exists)
+							sum_influence += inferred_signals[n2];
+					}
+				// given the sum_influence and their actual action, there are cases.
+				int action = (state[neighbors[n1]].adopted ? 1 : -1);
+				// if the influence is enough to override their signal, we don't
+				// know their signal because they were part of a cascade
+				if (sum_influence * action > 1)
+					inferred_signals[n1] = 0;
+				// if the influence is ±1 and they agreed with it, they might have
+				// flipped a coin
+				else if (sum_influence * action == 1)
+					inferred_signals[n1] = action * 2.0 / 3.0;
+				// otherwise the influence is too weak and we're seeing their signal.
+				else
+					inferred_signals[n1] = action;
+				total_influence += inferred_signals[n1];
+			}
 
-		typename graph_traits<neighborhood_t>::vertex_iterator ini,inend;
-		tie(ini,inend) = vertices(i_nhood);
-		copy( ini,inend, std::ostream_iterator<vertex_index_t>( std::cout, ' ' ) );
-
-		//
-		if (0 && n_up > n_down)
+		// given the total influence and the signal, decide what to do
+		int signed_signal = (signal ? 1 : -1);
+		cout << "site " << i << ": ";
+		cout << "total influence = " << total_influence << ", signal = "
+			<< signed_signal << ": ";
+		if (total_influence + signed_signal > 0)
 		{ state[i].adopted = true;
-			if (n_adopted > n_decided - n_adopted + 1) // would adopt with down signal
-				state[i].cascaded = true;
+			cout << 1;
+			if (total_influence > 1)
+			{ state[i].cascaded = true;
+				cout << " (cascade)";
+			}
 		}
-		else if (0 && n_up < n_down)
+		else if (total_influence + signed_signal < 0)
 		{ state[i].adopted = false;
-			if (n_adopted + 1 < n_decided - n_adopted) // would adopt with up signal
-				state[i].cascaded = true;
+			cout << -1;
+			if (total_influence < -1)
+			{ state[i].cascaded = true;
+				cout << " (cascade)";
+			}
 		}
 		else
 		{ state[i].adopted = bernoulli_distribution<>(0.5)(this->rng);
-			//cout << "coin flip: " << state[i].adopted << "\n";
+			cout << "coin flip: " << (state[i].adopted ? 1 : -1);
 			state[i].flipped = true;
 		}
+	  cout << "\n";
 		state[i].neighbors_adopted = n_adopted;
 		state[i].neighbors_decided = n_decided;
 	}
