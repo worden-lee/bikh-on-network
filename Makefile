@@ -54,7 +54,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # batch simulations
 
-batch-data/batch.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
+batch-data/batch.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl
 
 batch-data/summaries.csv : batch-data/batch.csv
