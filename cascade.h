@@ -209,31 +209,31 @@ public:
 
 		// given the total influence and the signal, decide what to do
 		int signed_signal = (signal ? 1 : -1);
-		cout << "site " << i << ": ";
-		cout << "total influence = " << total_influence << ", signal = "
-			<< signed_signal << ": ";
+		//cout << "site " << i << ": ";
+		//cout << "total influence = " << total_influence << ", signal = "
+		//	<< signed_signal << ": ";
 		if (total_influence + signed_signal > 0)
 		{ state[i].adopted = true;
-			cout << 1;
+			//cout << 1;
 			if (total_influence > 1)
 			{ state[i].cascaded = true;
-				cout << " (cascade)";
+				//cout << " (cascade)";
 			}
 		}
 		else if (total_influence + signed_signal < 0)
 		{ state[i].adopted = false;
-			cout << -1;
+			//cout << -1;
 			if (total_influence < -1)
 			{ state[i].cascaded = true;
-				cout << " (cascade)";
+				//cout << " (cascade)";
 			}
 		}
 		else
 		{ state[i].adopted = bernoulli_distribution<>(0.5)(this->rng);
-			cout << "coin flip: " << (state[i].adopted ? 1 : -1);
+			//cout << "coin flip: " << (state[i].adopted ? 1 : -1);
 			state[i].flipped = true;
 		}
-	  cout << "\n";
+	  //cout << "\n";
 		state[i].neighbors_adopted = n_adopted;
 		state[i].neighbors_decided = n_decided;
 	}

@@ -60,7 +60,7 @@ batch-data/batch.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron batch-data
 batch-data/summaries.csv : batch-data/batch.csv
 	sed -n -e 1p -e /^0/p `find batch-data -name summary.csv` > $@
 
-batch-data/summaries.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
+batch-data/summaries.mean.png batch-data/summaries.probability.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
 batch-data :
