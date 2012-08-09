@@ -75,7 +75,7 @@ def make_plot(csv_file):
 				label="%d neighbors, %s"%(nb,r) )
 	plt.plot( pr[0], pr[0], 'k,' )
 	plt.suptitle("Mean density of adoption")
-	plt.legend(loc="lower right", prop={"size":8})
+	plt.legend(loc="lower right", prop={"size":9})
 	fig.savefig(summaries_filename);
 
 	summaries_filename = csv_file.rstrip("csv") + "probability.png"
@@ -85,8 +85,9 @@ def make_plot(csv_file):
 	for pr, r, n, nb, c_index in prob_plots:
 		plt.plot( pr[0], pr[1], coloration[c_index], 
 				label="%d neighbors, %s"%(nb,r) )
+	plt.xlim(xmax=0.6)
 	plt.suptitle("Probability that majority adopts")
-	plt.legend(loc="lower right", prop={"size":8})
+	plt.legend(loc="lower right", prop={"size":9})
 	fig.savefig(summaries_filename);
 
 for csv_file in filenameslist:
