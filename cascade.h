@@ -132,6 +132,66 @@ public:
 	}
 };
 
+template<typename network_t, typename params_t, typename rng_t>
+class approximate_inference_update_rule : 
+	public bikh_on_network_update_rule<network_t,params_t,rng_t>
+{
+public:
+	typedef typename 
+		bikh_on_network_update_rule<network_t,params_t,rng_t>::state_container_t 
+		state_container_t;
+	typedef typename 
+		bikh_on_network_update_rule<network_t,params_t,rng_t>::vertex_index_t 
+		vertex_index_t;
+
+	approximate_inference_update_rule(double p, rng_t &__rng) :
+		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
+
+	virtual void figure_out_update(vertex_index_t i, bool signal,
+		 network_t &n, state_container_t &state)
+	{ typename graph_traits<network_t>::out_edge_iterator ei,eend;
+		unsigned n_decided = 0, n_adopted = 0;
+		for (tie(ei,eend) = out_edges(i,n); ei != eend; ++ei)
+		{ vertex_index_t j = target(*ei,n);
+			if (state[j].decided)
+			{ ++n_decided;
+				if (state[j].adopted)
+					++n_adopted;
+			}
+		}
+		unsigned n_up = 0, n_down = 0;
+		// reconstruct everyone's decisions and try to infer their signals
+		typename graph_traits<network_t>::adjacency_iterator ai,aend;
+		typedef subgraph<network_t> neighborhood_t;
+		neighborhood_t i_nhood = n.create_subgraph();
+		for (tie(ai,aend) = adjacent_vertices(i, n); ai != aend; ++ai)
+			add_vertex(*ai, i_nhood);
+
+		typename graph_traits<neighborhood_t>::vertex_iterator ini,inend;
+		tie(ini,inend) = vertices(i_nhood);
+		copy( ini,inend, std::ostream_iterator<vertex_index_t>( std::cout, ' ' ) );
+
+		//
+		if (0 && n_up > n_down)
+		{ state[i].adopted = true;
+			if (n_adopted > n_decided - n_adopted + 1) // would adopt with down signal
+				state[i].cascaded = true;
+		}
+		else if (0 && n_up < n_down)
+		{ state[i].adopted = false;
+			if (n_adopted + 1 < n_decided - n_adopted) // would adopt with up signal
+				state[i].cascaded = true;
+		}
+		else
+		{ state[i].adopted = bernoulli_distribution<>(0.5)(this->rng);
+			//cout << "coin flip: " << state[i].adopted << "\n";
+			state[i].flipped = true;
+		}
+		state[i].neighbors_adopted = n_adopted;
+		state[i].neighbors_decided = n_decided;
+	}
+};
+
 template<typename network_t, typename params_t>
 class network_dynamics
 {
@@ -245,7 +305,9 @@ void do_cascade(network_t &n, params_t &parameters, rng_t &rng_arg)
     nodes_csv.newRow();
   }
 
-	typedef pluralistic_ignorance_update_rule<network_t, params_t, rng_t> 
+//typedef pluralistic_ignorance_update_rule<network_t, params_t, rng_t> 
+//		update_rule_t;
+	typedef approximate_inference_update_rule<network_t, params_t, rng_t> 
 		update_rule_t;
 	typedef update_everyone_once_dynamics<network_t, params_t, 
 		update_rule_t, rng_t> dynamics_t;
