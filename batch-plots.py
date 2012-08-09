@@ -60,7 +60,8 @@ def make_plot(csv_file):
 				pr = zip(*(sorted(mean_pairs, key = lambda pair: pair[0])))
 				mean_plots.append((pr, r, n, nb, c_index))
 				prob_success_pairs = ((p,
-					(len([pa for pa in p_adoption_list if pa > 0.5])/len(p_adoption_list)))
+							(1.0*len([pa for pa in p_adoption_list if pa > 0.5])
+								/len(p_adoption_list)))
 						for p, p_adoption_list in p_pairs)
 				pr = zip(*(sorted(prob_success_pairs, key = lambda pair: pair[0])))
 				prob_plots.append((pr, r, n, nb, c_index))
