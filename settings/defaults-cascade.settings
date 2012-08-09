@@ -6,6 +6,8 @@ n_neighbors 4
 
 p 0.55
 
+update_rule pluralistic-ignorance
+
 print_stuff 1
 print_adjacency_matrix 1
 outputDirectory out

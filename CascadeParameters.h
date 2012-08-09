@@ -28,6 +28,10 @@ public:
 	// probability that a given individual's private signal is accurate
 	DECLARE_PARAM(double, p)
 
+	// what type of process: pluralistic-ignorance, approximate-inference,
+	// or Bayesian
+	DECLARE_PARAM(string, update_rule)
+
 	void finishInitialize()
 	{ if (initial_graph_type() == "LATTICE" && n_vertices() == 0)
 		{ int nv = 1;
