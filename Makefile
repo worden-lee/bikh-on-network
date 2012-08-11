@@ -55,7 +55,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 # batch simulations
 
 batch-data/batch.csv batch-data/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --quick
+	$(BIKHDIR)/batch.pl
 
 #batch-data/summaries.csv : batch-data/batch.csv
 #	sed -n -e 1p -e /^0/p `find batch-data -name summary.csv` > $@
