@@ -40,9 +40,9 @@ public:
 	{ unsigned nr = neighborhood_radius();
 		string metric = lattice_metric();
 		if (metric == "infinity")
-			return (nr+1)*(nr+1) - 1;
+			return (2*nr+1)*(2*nr+1) - 1;
 		else if (metric == "taxicab")
-			return nr * (nr+1) / 2;
+			return 4 * nr * (nr+1) / 2;
 		else
 		{ cerr << "unknown lattice_metric\n";
 			return -1;
