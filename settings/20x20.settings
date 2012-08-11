@@ -1,2 +1,2 @@
-lattice_dim_0 20
-lattice_dim_1 20
+include 20x20.settings
+

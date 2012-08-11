@@ -2,7 +2,9 @@ initial_graph_type LATTICE
 lattice_dimensions 2
 lattice_dim_0 10
 lattice_dim_1 10
-n_neighbors 4
+
+lattice_metric taxicab
+neighborhood_radius 1
 
 p 0.55
 

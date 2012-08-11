@@ -20,7 +20,11 @@ public:
 	DECLARE_PARAM(unsigned, lattice_dim_generic)
 
 	// extent of neighborhood - first neighbors, second, ...
-	DECLARE_PARAM(unsigned, n_neighbors)
+	DECLARE_PARAM(unsigned, neighborhood_radius)
+
+	// what kind of neighborhood: square nbd in "taxicab" metric,
+	// diamond in "infinity" metric
+	DECLARE_PARAM(string, lattice_metric)
 
   // whether coordinates wrap around edges
   DECLARE_PARAM(bool, lattice_is_torus)
@@ -31,6 +35,19 @@ public:
 	// what type of process: pluralistic-ignorance, approximate-inference,
 	// or Bayesian
 	DECLARE_PARAM(string, update_rule)
+
+	unsigned n_neighbors(void)
+	{ unsigned nr = neighborhood_radius();
+		string metric = lattice_metric();
+		if (metric == "infinity")
+			return (nr+1)*(nr+1) - 1;
+		else if (metric == "taxicab")
+			return nr * (nr+1) / 2;
+		else
+		{ cerr << "unknown lattice_metric\n";
+			return -1;
+		}
+	}
 
 	void finishInitialize()
 	{ if (initial_graph_type() == "LATTICE" && n_vertices() == 0)
@@ -43,6 +60,20 @@ public:
 		  setn_vertices(nv);
 		}
 		Parameters::finishInitialize();
+	}
+
+	void parseSettingsFile(string filename)
+	{ string pathname = filename;
+		if (pathname[0] != '/')
+		{ pathname = dirnameForSettings() + '/' + filename;
+			struct stat statbuf;
+			if (!stat(pathname.c_str(), &statbuf))
+				return Parameters::parseSettingsFile(pathname);
+			pathname = dirnameForSettings() + "/settings/" + filename;
+			if (!stat(pathname.c_str(), &statbuf))
+				return Parameters::parseSettingsFile(pathname);
+		}
+		return Parameters::parseSettingsFile(filename);
 	}
 };
 
