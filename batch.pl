@@ -12,7 +12,7 @@ my $pstep = 0.01;
 my @plist =
  map { $_ * $pstep } (($prange[0]/$pstep) .. ($prange[1]/$pstep));
 
-my @nblist = (4,8);
+my @nblist = (4,8,12);
 
 my @rulelist = ("pluralistic-ignorance", "approximate-inference");
 
@@ -39,8 +39,12 @@ for my $i (1 .. $reps)
 { for my $rule (@rulelist)
 	{ for my $p (@plist)
 		{ for my $nb (@nblist)
-			{ for my $experiment (@experiments)
-				{ my @extra_args = ("update_rule=$rule","n_neighbors=$nb","p=$p");
+			{ my $nr; if ($nb == 12) { $nr = 2; } else { $nr = 1; }
+				my $metric; 
+				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
+				for my $experiment (@experiments)
+				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
+						"lattice_metric=$metric","p=$p");
 					my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
 					my $dirname = join("/",@extra_dirs);
 					my($catdir) = "$outdir/".$dirname;
