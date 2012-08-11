@@ -45,14 +45,14 @@ def make_plot(csv_file):
 			cols['update rule'],cols['proportion adopting'])
 	rows.sort(key=lambda row: row[0]) # sort by p
 	rows.sort(key=lambda row: row[2]) # then by lattice size
-	rows.sort(key=lambda row: row[1]) # then by neighborhood size
 	rows.sort(key=lambda row: row[3]) # then by update rule
+	rows.sort(key=lambda row: row[1]) # then by neighborhood size
 	mean_plots = []
 	prob_plots = []
 	c_index = 0
-	for r, rows_r in groupby(rows, lambda row: row[3]):
-		for nb, rows_nb in groupby(rows_r, lambda row: row[1]):
-			for n, rows_n in groupby(rows_nb, lambda row: row[2]):
+	for nb, rows_nb in groupby(rows, lambda row: row[1]):
+		for r, rows_r in groupby(rows_nb, lambda row: row[3]):
+			for n, rows_n in groupby(rows_r, lambda row: row[2]):
 				p_pairs = [(p,[row[4] for row in rows_p])
 						for p, rows_p in groupby(rows_n, lambda row: row[0])]
 				mean_pairs = ((p,mean(p_adoption_list))

@@ -52,7 +52,7 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 	}
 	CSVDisplay microstate_csv(parameters.outputDirectory()+"/microstate.csv");
 	microstate_csv << "t" << "x" << "y" << "index" 
-		<< "decided" << "adopted" << "cascaded" << "flipped" << "signal" 
+		<< "decided" << "signal" << "adopted" << "cascaded" << "flipped"
 		<< "neighbors decided" << "neighbors adopted" << endl;
 
 	while (1)
@@ -70,10 +70,10 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 				int x = i % dim0, y = i / dim0;
 				microstate_csv << cascade_dynamics.t() << x << y << i
 					<< cascade_dynamics.state()[i].decided
+					<< cascade_dynamics.state()[i].signal 
 					<< cascade_dynamics.state()[i].adopted
 					<< cascade_dynamics.state()[i].cascaded
 					<< cascade_dynamics.state()[i].flipped
-					<< cascade_dynamics.state()[i].signal 
 					<< cascade_dynamics.state()[i].neighbors_decided
 					<< cascade_dynamics.state()[i].neighbors_adopted 
 					<< endl;
@@ -85,9 +85,10 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 	}
 
 	CSVDisplay summary_csv(parameters.outputDirectory()+"/summary.csv");
-	summary_csv << "p" << "neighbors" << "update rule" << "population size"
+	summary_csv << "random seed" << "p" << "neighbors" << "update rule" << "population size"
 		<< "proportion adopting" << "proportion cascading" << endl;
-	summary_csv << parameters.p() << parameters.n_neighbors() 
+	summary_csv << fstring("%.3ld",parameters.randSeed()) 
+		<< parameters.p() << parameters.n_neighbors() 
 		<< parameters.update_rule() << num_vertices(n)
 		<< (cascade_dynamics.state().n_adopting() /
 				 (double)cascade_dynamics.state().n_decided())

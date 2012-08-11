@@ -4,17 +4,24 @@ use File::Spec::Functions qw(rel2abs);
 use File::Basename;
 
 my $reps = 1000;
-if (grep(/^--quick$/,@ARGV))
-{ $reps = 10; print "quick\n"; }
 
 my @prange = (0.5,1);
 my $pstep = 0.01;
-my @plist =
- map { $_ * $pstep } (($prange[0]/$pstep) .. ($prange[1]/$pstep));
 
 my @nblist = (4,8,12);
 
 my @rulelist = ("pluralistic-ignorance", "approximate-inference");
+
+if (grep(/^--quick$/,@ARGV))
+{ $reps = 1; 
+	$pstep = 0.05;
+	print "quick\n"; 
+}
+if (grep(/^--keep$/,@ARGV)) # this is not so well tested
+{ $keep = 1; print "keep\n"; }
+
+my @plist =
+ map { $_ * $pstep } (($prange[0]/$pstep) .. ($prange[1]/$pstep));
 
 my $pwd = `pwd`;
 chomp($pwd);
@@ -47,10 +54,13 @@ for my $i (1 .. $reps)
 						"lattice_metric=$metric","p=$p");
 					my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
 					my $dirname = join("/",@extra_dirs);
-					my($catdir) = "$outdir/".$dirname;
-					my($dest) = "$catdir/out.$i";
-					print BATCHCSV "$dirname,$experiment,$rule,$nb,$p\n";
-					next if (-e $dest);
+					my($catdir, $dest);
+					if ($keep) {
+						$catdir = "$outdir/".$dirname;
+						$dest = "$catdir/out.$i";
+						print BATCHCSV "$dirname,$experiment,$rule,$nb,$p\n";
+						next if (-e $dest);
+					}
 					if (!-e "out") { mkdir("out") or die "couldn't mkdir out"; }
 					system("rm -rf out/*");
 					my $comm = "$code_dir/bikhitron -f $code_dir/settings/$experiment.settings ".
@@ -58,11 +68,26 @@ for my $i (1 .. $reps)
 					print "$comm\n";
 					system($comm) == 0 or die "error running $comm";
 					## @@ !! double check this is the right file to check for existence !!
-					if (-e "out/microstate.csv")
-					{ if (!-e $catdir) { mkpath($catdir) or die "couldn't create $catdir"; }
-						$comm = "cp -r --force --backup=numbered out/ $dest";
-						print "$comm\n";
-						system($comm) == 0 or die "error running $comm";
+					if (-e "out/settings.csv")
+					{ if ($keep)
+						{ if (!-e $catdir) 
+							{ mkpath($catdir) or die "couldn't create $catdir"; }
+							$comm = "cp -r --force --backup=numbered out/ $dest";
+							print "$comm\n";
+							system($comm) == 0 or die "error running $comm";
+						}
+						else 
+						{ $seed = `grep randSeed out/settings.csv | sed s/randSeed,//`;
+							chomp $seed;
+							print BATCHCSV "$seed,$experiment,$rule,$nb,$p\n";
+							rename("out/settings.csv", "$batchdir/settings.$seed.csv");
+							if (-e "$batchdir/summaries.csv") {
+								system("sed -n -e 2p out/summary.csv >> $batchdir/summaries.csv");
+							} else {
+								print "OVERWRITE summaries.csv\n";
+								rename("out/summary.csv", "$batchdir/summaries.csv");
+							}
+						}
 					}
 				}
 			}
