@@ -161,67 +161,83 @@ public:
 	approximate_inference_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
 
+	float sum_of_influences(vector<vertex_index_t>&neighbors, 
+			network_t &n, state_container_t &state, string indent = "")
+	{ 
+		// in order, try to infer their signal from what they were looking at
+		float total_influence = 0;
+		//cout << indent << "In sum_of_influences with";
+		//for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
+		//	cout << ' ' << neighbors[n1];
+		//cout <<"\n";
+		vector<vertex_index_t> n1_neighbors;
+		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
+		{ n1_neighbors.clear();
+			cout << indent << "  neighbor " << neighbors[n1] << " (action "
+				<< state[neighbors[n1]].adopted << ") sees";
+			// what were they looking at?
+			for ( unsigned n2 = 0; n2 < n1; ++n2 )
+			{ typename boost::graph_traits<network_t>::edge_descriptor e;
+				bool edge_exists;
+				tie(e, edge_exists) = edge(neighbors[n1],neighbors[n2],n);
+				if (edge_exists)
+				{ cout << ' ' << neighbors[n2];
+					n1_neighbors.push_back(neighbors[n2]);
+				}
+			}
+			cout << "\n";
+			float n1_sum_influence = 
+				sum_of_influences(n1_neighbors, n, state, indent + "  ");
+			cout << indent << "    sum of influences: " << n1_sum_influence << "\n";
+
+			// given the sum_influence and their actual action, there are cases.
+			float n1_inferred_signal;
+			int action = (state[neighbors[n1]].adopted ? 1 : -1);
+			// if the influence is enough to override their signal, we don't
+			// know their signal because they were part of a cascade
+			if (n1_sum_influence * action > 1)
+				n1_inferred_signal = 0;
+			// if the influence is ±1 and they agreed with it, they might have
+			// flipped a coin
+			else if (n1_sum_influence * action == 1)
+				n1_inferred_signal = action / 3.0;
+			// otherwise the influence is too weak and we're seeing their signal.
+			else
+				n1_inferred_signal = action;
+			cout << indent << "    inferred signal: " << n1_inferred_signal << "\n";
+			total_influence += n1_inferred_signal;
+		}
+		return total_influence;
+	}
+
 	virtual void figure_out_update(vertex_index_t i, bool signal,
 		 network_t &n, state_container_t &state)
-	{ typename graph_traits<network_t>::out_edge_iterator ei,eend;
-		unsigned n_decided = 0, n_adopted = 0;
-		for (tie(ei,eend) = out_edges(i,n); ei != eend; ++ei)
-		{ vertex_index_t j = target(*ei,n);
-			if (state[j].decided)
-			{ ++n_decided;
-				if (state[j].adopted)
-					++n_adopted;
-			}
-		}
-		unsigned n_up = 0, n_down = 0;
-
+	{ 
 		// reconstruct everyone's decisions and try to infer their signals
 		cout << "Update site " << i << " (signal " << signal << "):\n";
 
 		// get everyone in the neighborhood, from first to play, to last
 		typename graph_traits<network_t>::adjacency_iterator ai,aend;
-		tie(ai,aend) = adjacent_vertices(i, n);
-		vector<vertex_index_t> neighbors( ai, aend );
-		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
-		vector<float> inferred_signals( neighbors.size(), 0./0. );
-		// in order, try to infer their signal from what they were looking at
-		float total_influence = 0;
-		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
-			if (state[neighbors[n1]].decided)
-			{ cout << "  neighbor " << neighbors[n1] << "(action "
-					<< state[neighbors[n1]].adopted << ") sees";
-				// what were they looking at?
-				float sum_influence = 0;
-				for ( unsigned n2 = 0; n2 < n1; ++n2 )
-				  if (state[neighbors[n2]].decided)
-					{ typename boost::graph_traits<network_t>::edge_descriptor e;
-						bool edge_exists;
-						tie(e, edge_exists) = edge(neighbors[n1],neighbors[n2],n);
-						if (edge_exists)
-						{ cout << ' ' << neighbors[n2];
-							sum_influence += inferred_signals[n2];
-						}
-					}
-				// given the sum_influence and their actual action, there are cases.
-				int action = (state[neighbors[n1]].adopted ? 1 : -1);
-				// if the influence is enough to override their signal, we don't
-				// know their signal because they were part of a cascade
-				if (sum_influence * action > 1)
-					inferred_signals[n1] = 0;
-				// if the influence is ±1 and they agreed with it, they might have
-				// flipped a coin
-				else if (sum_influence * action == 1)
-					inferred_signals[n1] = action / 3.0;
-				// otherwise the influence is too weak and we're seeing their signal.
-				else
-					inferred_signals[n1] = action;
-				cout << ": " << inferred_signals[n1] << "\n";
-				total_influence += inferred_signals[n1];
+		vector<vertex_index_t> neighbors;
+		unsigned n_decided = 0, n_adopted = 0;
+		for (tie(ai,aend) = adjacent_vertices(i, n); ai != aend; ++ai)
+		{ vertex_index_t j = *ai;
+			if (state[j].decided)
+			{ ++n_decided;
+				if (state[j].adopted)
+					++n_adopted;
+				neighbors.push_back(j);
 			}
+		}
+		unsigned n_up = 0, n_down = 0;
+		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
+
+		// what are all the neighbors' signals worth to me?
+		float total_influence = sum_of_influences(neighbors, n, state);
 
 		// given the total influence and the signal, decide what to do
 		int signed_signal = (signal ? 1 : -1);
-		cout << "total influence = " << total_influence << ": ";
+		cout << "  total influence = " << total_influence << ": ";
 		if (total_influence + signed_signal > 0)
 		{ state[i].adopted = true;
 			cout << 1;
