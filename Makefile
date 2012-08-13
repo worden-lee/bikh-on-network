@@ -30,7 +30,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(CXX) $(CFLAGS) $(SIMOBJS) $(LDFLAGS) -o $@
 
 # run the simulation
-%.out/microstate.csv : $(BIKHDIR)/settings/%.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings/defaults-cascade.settings
+%.out/summary.csv %.out/microstate.csv : $(BIKHDIR)/settings/%.settings $(BIKHDIR)/bikhitron $(BIKHDIR)/settings/defaults-cascade.settings
 	$(BIKHDIR)/bikhitron --outputDirectory=$*.out -f $<
 	$(RM) $*.out/*.frame.png
 	
@@ -50,7 +50,7 @@ bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %.out :
 	mkdir $@
 
-.PRECIOUS: $(BIKHDIR)/bikhitron %.out %.out/microstate.csv %.out/microstate.animation.gif %.out/microstate.animation.mpg %.out/microstate.animation.ogv
+.PRECIOUS: $(BIKHDIR)/bikhitron %.out %.out/summary.csv %.out/microstate.csv %.out/microstate.animation.gif %.out/microstate.animation.mpg %.out/microstate.animation.ogv
 
 # batch simulations
 

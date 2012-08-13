@@ -33,7 +33,7 @@ public:
 	DECLARE_PARAM(double, p)
 
 	// what type of process: pluralistic-ignorance, approximate-inference,
-	// or Bayesian
+	// or bayesian-with-horizon
 	DECLARE_PARAM(string, update_rule)
 
 	unsigned n_neighbors(void)

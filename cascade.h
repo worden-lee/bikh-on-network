@@ -101,7 +101,6 @@ public:
 	typedef typename 
 		bikh_on_network_update_rule<network_t,params_t,rng_t>::vertex_index_t 
 		vertex_index_t;
-	using bikh_on_network_update_rule<network_t,params_t,rng_t>::compare_times;
 
 	pluralistic_ignorance_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
@@ -247,7 +246,7 @@ public:
 
 
 template<typename network_t, typename params_t, typename rng_t>
-class bayesian_update_rule : 
+class bayesian_with_horizon_update_rule : 
 	public bikh_on_network_update_rule<network_t,params_t,rng_t>
 {
 public:
@@ -257,9 +256,70 @@ public:
 	typedef typename 
 		bikh_on_network_update_rule<network_t,params_t,rng_t>::vertex_index_t 
 		vertex_index_t;
+	using bikh_on_network_update_rule<network_t,params_t,rng_t>::p;
+	typedef typename
+	 	bikh_on_network_update_rule<network_t,params_t,rng_t>::compare_times
+		compare_times;
 
-	bayesian_update_rule(double p, rng_t &__rng) :
+	bayesian_with_horizon_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
+
+	// the posterior likelihood that true signal is 1, given an "excess
+	// signal" of k = sum_i (2x_i - 1).
+	float s(int k) 
+	{ return 1.0 / (pow((1-p)/p, k) + 1);
+	}
+
+	// the posterior likelihood that true signal is 1, given a list of
+	// "action probability" pairs for predecessors players, and my signal.
+	// this calls itself recursively with information accumulating in 
+	// the "excess signal" k.  Call from outside with k = +/- 1 depending
+	// on your private signal.
+  float V(vector< pair<float,float> > &action_probabilities,
+					vector<unsigned> &predecessors,
+					int k)
+	{ if (predecessors.empty())
+		{ float sk = s(k);
+			cout << sk << " [s(" << k << ")]";
+			return sk;
+		}
+		else
+		{ int summer = predecessors.back();
+			predecessors.pop_back();
+			float accum = 0;
+			cout << '(' << action_probabilities[summer].first;
+			if (action_probabilities[summer].first > 0)
+			{ cout << " · ";
+				accum += action_probabilities[summer].first * 
+					V(action_probabilities, predecessors, k-1);
+			}
+			cout << " + " << action_probabilities[summer].second;
+			if (action_probabilities[summer].second > 0)
+			{ cout << " · ";
+				accum += action_probabilities[summer].second * 
+					V(action_probabilities, predecessors, k+1);
+			}
+			cout << ')';
+			predecessors.push_back(summer);
+			return accum;
+		}
+	}
+	
+	// Action probability function: probability that player takes action
+	// a (= 0 or 1), given that their likelihood that true signal is up is v.
+	float A(int a, float v)
+	{ float A1;
+		if (v > 0.5)
+			A1 = 1;
+		else if (v == 0.5)
+			A1 = 0.5;
+		else
+			A1 = 0;
+		if (a == 0)
+			return 1 - A1;
+		else
+			return A1;
+	}
 
 	virtual void figure_out_update(vertex_index_t i, bool signal,
 		 network_t &n, state_container_t &state)
@@ -273,72 +333,111 @@ public:
 					++n_adopted;
 			}
 		}
-		unsigned n_up = 0, n_down = 0;
+
+		cout << "Update site " << i << " (signal " << signal << "):\n";
+
 		// reconstruct everyone's decisions and try to infer their signals
 
-		// get everyone in the neighborhood, from first to play, to last
+		// list everyone in the neighborhood, from first player to last
 		typename graph_traits<network_t>::adjacency_iterator ai,aend;
 		tie(ai,aend) = adjacent_vertices(i, n);
 		vector<vertex_index_t> neighbors( ai, aend );
 		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
-		vector<float> inferred_signals( neighbors.size(), 0./0. );
+		vector< pair<float,float> > 
+			action_probabilities( neighbors.size(), pair<float,float>(-1,-1) );
+
 		// in order, try to infer their signal from what they were looking at
-		float total_influence = 0;
+		vector<unsigned> i_predecessors; // list of i's relevant neighbors
+		vector<unsigned> n1_predecessors; // temp list of neighbor's neighbors
 		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
 			if (state[neighbors[n1]].decided)
-			{ // what were they looking at?
-				float sum_influence = 0;
+			{ i_predecessors.push_back(n1);
+				// which players were they looking at?
+				n1_predecessors.clear();
+				cout << "  neighbor " << neighbors[n1] 
+					<< " (action: " << state[neighbors[n1]].adopted << ") sees:";
 				for ( unsigned n2 = 0; n2 < n1; ++n2 )
 				  if (state[neighbors[n2]].decided)
 					{ typename boost::graph_traits<network_t>::edge_descriptor e;
 						bool edge_exists;
 						tie(e, edge_exists) = edge(neighbors[n1],neighbors[n2],n);
 						if (edge_exists)
-							sum_influence += inferred_signals[n2];
+						{ // player n2 was visible to player n1
+							n1_predecessors.push_back(n2);
+							cout << ' ' << neighbors[n2]
+								<< " (" << state[neighbors[n2]].adopted << ')';
+						}
 					}
-				// given the sum_influence and their actual action, there are cases.
-				int action = (state[neighbors[n1]].adopted ? 1 : -1);
-				// if the influence is enough to override their signal, we don't
-				// know their signal because they were part of a cascade
-				if (sum_influence * action > 1)
-					inferred_signals[n1] = 0;
-				// if the influence is ±1 and they agreed with it, they might have
-				// flipped a coin
-				else if (sum_influence * action == 1)
-					inferred_signals[n1] = action * 2.0 / 3.0;
-				// otherwise the influence is too weak and we're seeing their signal.
-				else
-					inferred_signals[n1] = action;
-				total_influence += inferred_signals[n1];
+				cout << "\n";
+
+				// what could they have done with that information?
+				// Do the likelihood calculation and get the two probabilities:
+				// P(taking the action they did | an up signal)
+				// P(taking the action they did | a down signal)
+
+				cout << "    ";
+				// first for a low signal
+				float V_low = V(action_probabilities, n1_predecessors, -1);
+				cout << " = " << V_low << "\n    ";
+				action_probabilities[n1].first = A(state[neighbors[n1]].adopted, V_low);
+				// then for a high signal
+				float V_high = V(action_probabilities, n1_predecessors, 1);
+				cout << " = " << V_high << "\n";
+				action_probabilities[n1].second = A(state[neighbors[n1]].adopted, V_high);
+				// And now normalize them to get likelihood of each signal
+				// given that they took the action.
+				float A_sum = 
+					action_probabilities[n1].first + action_probabilities[n1].second; 
+				action_probabilities[n1].first  /= A_sum;
+				action_probabilities[n1].second /= A_sum;
+				cout << "    Action probs for " << neighbors[n1] << ": "
+				  << action_probabilities[n1].first  << ' '
+				  << action_probabilities[n1].second << "\n";
 			}
 
-		// given the total influence and the signal, decide what to do
-		int signed_signal = (signal ? 1 : -1);
-		//cout << "site " << i << ": ";
-		//cout << "total influence = " << total_influence << ", signal = "
-		//	<< signed_signal << ": ";
-		if (total_influence + signed_signal > 0)
-		{ state[i].adopted = true;
-			//cout << 1;
-			if (total_influence > 1)
-			{ state[i].cascaded = true;
-				//cout << " (cascade)";
+		// now we have a pair of posterior probabilities for each player
+		// who's played, and we sum across all the possible combinations of
+		// signals to get our posterior likelihood that the true signal
+		// is up.  Adopt if that's > 0.5, flip a coin if = 0.5.
+		cout << "  My likelihood: ";
+		float V_i = V(action_probabilities, i_predecessors, signal?1:-1);
+		float A_i = A(1,V_i);
+		cout << " = " << V_i;
+		// for record-keeping, what would i have done given the other signal
+		if (A_i > 0.5)
+		{ state[i].adopted = 1;
+			cout << "\n  (counterfactual: ";
+			float V_counterfactual =
+				V(action_probabilities, i_predecessors, (!signal)?1:-1);
+			float A_counterfactual = A(1, V_counterfactual);
+			cout << " = " << V_counterfactual << ")\n";
+			cout << "  Action: 1";
+			if (A_counterfactual > 0.5)
+			{ state[i].cascaded = 1;
+				cout << " in cascade";
 			}
+			cout << ".\n";
 		}
-		else if (total_influence + signed_signal < 0)
-		{ state[i].adopted = false;
-			//cout << -1;
-			if (total_influence < -1)
-			{ state[i].cascaded = true;
-				//cout << " (cascade)";
-			}
-		}
-		else
+		else if (A_i == 0.5)
 		{ state[i].adopted = bernoulli_distribution<>(0.5)(this->rng);
-			//cout << "coin flip: " << (state[i].adopted ? 1 : -1);
+			cout << "\n  Coin flip: " << (state[i].adopted ? 1 : 0) << ".\n";
 			state[i].flipped = true;
 		}
-	  //cout << "\n";
+		else
+		{	state[i].adopted = 0;
+			cout << "\n  (counterfactual: ";
+			float V_counterfactual =
+				V(action_probabilities, i_predecessors, (!signal)?1:-1);
+			float A_counterfactual = A(1, V_counterfactual);
+			cout << " = " << V_counterfactual << ")\n";
+			cout << "  Action: 0";
+			if (A_counterfactual < 0.5)
+			{	state[i].cascaded = 1;
+				cout << " in cascade";
+			}
+			cout << ".\n";
+		}
+
 		state[i].neighbors_adopted = n_adopted;
 		state[i].neighbors_decided = n_decided;
 	}
