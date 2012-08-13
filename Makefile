@@ -16,7 +16,7 @@ CFLAGS+=-O3
 endif
 
 #default: swarming
-default: bikhitron
+default: $(BIKHDIR)/bikhitron
 
 over: clean default
 
@@ -25,8 +25,8 @@ NETDYNLIB = $(NETDYNDIR)/libnet-dyn.a
 $(NETDYNLIB) : /proc/uptime
 	$(MAKE) -C $(NETDYNDIR)
 
-SIMOBJS = bikhitron.o
-bikhitron : $(SIMOBJS) $(NETDYNLIB)
+SIMOBJS = $(BIKHDIR)/bikhitron.o
+$(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(CXX) $(CFLAGS) $(SIMOBJS) $(LDFLAGS) -o $@
 
 # run the simulation

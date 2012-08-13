@@ -307,7 +307,7 @@ public:
 	// the "excess signal" k.  Call it from outside with k = 0.
   vector<float>
 	 	double_V(vector< vector<float> > &action_probabilities,
-						 vector<unsigned> &predecessors, int upto = -2, int k = 0)
+						 vector<vertex_index_t> &predecessors, int upto = -2, int k = 0)
 	{ if (predecessors.empty() || upto == -1)
 		{ vector<float> sk(2);
 		  sk[0] = s(k-1);
@@ -397,7 +397,7 @@ public:
 
 		// for each neighbor n1, try to infer their signal from 
 		// what they were looking at and what they did
-		vector<unsigned> n1_neighbors; // temp list of neighbor's neighbors
+		vector<vertex_index_t> n1_neighbors; // temp list of neighbor's neighbors
 		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
 		{ 
 			// which players were they looking at?
@@ -456,7 +456,7 @@ public:
 		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
 
 		// get the probabilities of adopting depending on my signal
-		vector<float> as = action_probabilities(1, neighbors, n, state);
+		vector<float> as = action_probabilities(true, neighbors, n, state);
 		LOG_OUT << '\n';
 
 		// what matters is the answer for my actual signal.
