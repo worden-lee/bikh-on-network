@@ -85,8 +85,9 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 	}
 
 	CSVDisplay summary_csv(parameters.outputDirectory()+"/summary.csv");
-	summary_csv << "random seed" << "p" << "neighbors" << "update rule" << "population size"
-		<< "proportion adopting" << "proportion cascading" << endl;
+	summary_csv << "random seed" << "p" << "neighbors" << "update rule" 
+		<< "population size" << "proportion adopting" << "proportion cascading" 
+		<< "last action" << endl;
 	summary_csv << fstring("%.3ld",parameters.randSeed()) 
 		<< parameters.p() << parameters.n_neighbors() 
 		<< parameters.update_rule() << num_vertices(n)
@@ -94,6 +95,7 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 				 (double)cascade_dynamics.state().n_decided())
 		<< (cascade_dynamics.state().n_cascading() /
 				 (double)cascade_dynamics.state().n_decided())
+		<< cascade_dynamics.state()[cascade_dynamics.already_updated.back()].adopted
 		<< endl;
 }
 

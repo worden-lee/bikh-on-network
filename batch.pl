@@ -10,7 +10,7 @@ my $pstep = 0.01;
 
 my @nblist = (4,8,12);
 
-my @rulelist = ("pluralistic-ignorance", "approximate-inference");
+my @rulelist = ("pluralistic-ignorance", "approximate-inference", "bayesian-with-horizon");
 
 if (grep(/^--quick$/,@ARGV))
 { $reps = 1; 
