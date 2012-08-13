@@ -28,11 +28,12 @@ filenameslist.sort()
 
 number_of_txtfiles = len(filenameslist)
  
-def save_frame(data, filename_base, frame_number):
+def save_frame(data, filename_base, frame_number, nb, rule):
 	frame_filename = filename_base + "%06g.frame.png"%float(frame_number)
 	if ( not os.path.exists(frame_filename) ):
 		print frame_filename
 		fig = plt.figure(figsize=(4,4))
+		plt.suptitle("%s neighbors, %s"%(nb,rule))
 		plt.subplot(111)
 		plt.imshow(data, interpolation="nearest")
 		fig.savefig(frame_filename)
@@ -40,6 +41,8 @@ def save_frame(data, filename_base, frame_number):
 def make_frames(csv_file):
 	settings_file = csv_file.rstrip("microstate.csv")+"settings.csv"
 	settings = dict(csv.reader(open(settings_file)))
+	nb = settings['n_neighbors']
+	rule = settings['update_rule']
 	#print settings
 	csvreader = csv.DictReader(open(txt_file,'r'))
 	#csvheader = csvreader.next()
@@ -74,7 +77,7 @@ def make_frames(csv_file):
 		#if float(row['t']) > 300:
 		#	break
 		if float(row['t']) >= next_frame_t:
-			save_frame(X, txt_file.rstrip("csv"), next_frame_t)
+			save_frame(X, txt_file.rstrip("csv"), next_frame_t, nb, rule)
 			next_frame_t = next_frame_t + 1
 		X[row['x'],row['y'],:] = color(
 				int(row['decided']), 
@@ -82,7 +85,7 @@ def make_frames(csv_file):
 				int(row['cascaded']),
 				int(row['flipped']))
 		#print row, X[row['x'],row['y'],:]
-	save_frame(X, txt_file.rstrip("csv"), next_frame_t)
+	save_frame(X, txt_file.rstrip("csv"), next_frame_t, nb, rule)
 
 for txt_file in filenameslist:
 	make_frames(txt_file)

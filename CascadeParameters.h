@@ -22,6 +22,9 @@ public:
 	// extent of neighborhood - first neighbors, second, ...
 	DECLARE_PARAM(unsigned, neighborhood_radius)
 
+	// not used by lattice but used in output files
+	DECLARE_PARAM(unsigned, n_neighbors)
+
 	// what kind of neighborhood: square nbd in "taxicab" metric,
 	// diamond in "infinity" metric
 	DECLARE_PARAM(string, lattice_metric)
@@ -36,7 +39,7 @@ public:
 	// or bayesian-with-horizon
 	DECLARE_PARAM(string, update_rule)
 
-	unsigned n_neighbors(void)
+	unsigned compute_n_neighbors(void)
 	{ unsigned nr = neighborhood_radius();
 		string metric = lattice_metric();
 		if (metric == "infinity")
@@ -58,6 +61,7 @@ public:
 				nv *= string_to_unsigned(*ds);
 			}
 		  setn_vertices(nv);
+			setn_neighbors(compute_n_neighbors());
 		}
 		Parameters::finishInitialize();
 	}
