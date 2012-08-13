@@ -359,6 +359,32 @@ public:
 			return A1;
 	}
 
+	// as below, but converted to likelihoods, i.e. instead of
+	// a_i we use a_i / (a_0 + a_1).
+	vector<float> action_likelihoods(bool action,
+			vector<vertex_index_t> &neighbors,
+			network_t &n, state_container_t &state, string indent = "")
+	{ vector<float> as = action_probabilities(action,
+			neighbors, n, state, indent);
+		float sum = as[0] + as[1];
+		if (sum > 0) // the sane case
+		{ as[0] /= sum;
+			as[1] /= sum;
+		}
+		else
+	  { // need to also handle the insane case, though:
+			// where there's no signal that could account for the action the
+			// player took, because they appear to be in a contrary cascade.
+			// This can happen because of influences outside our view.  In this
+			// case we say our player doesn't really know what happened, but
+			// assumes they wouldn't have taken such a contrary action without
+			// a signal to match.
+			as[action] = 1;
+		}
+		LOG_OUT << " -> (" << as[0] << ", " << as[1] << ")\n";
+		return as;
+	}
+
 	// given that these are the neighbors you can see (who have played
 	// before you), the probability that you take the action mentioned, 
 	// given that your signal is down and given that your signal is up, 
@@ -407,32 +433,6 @@ public:
 		as[1] = A(action, vs[1]);
 	  LOG_OUT << " = (" << vs[0] << ", " << vs[1] << ") => (" 
 			<< as[0] << ", " << as[1] << ")";
-		return as;
-	}
-
-	// as above, but converted to likelihoods, i.e. instead of
-	// a_i we use a_i / (a_0 + a_1).
-	vector<float> action_likelihoods(bool action,
-			vector<vertex_index_t> &neighbors,
-			network_t &n, state_container_t &state, string indent = "")
-	{ vector<float> as = action_probabilities(action,
-			neighbors, n, state, indent);
-		float sum = as[0] + as[1];
-		if (sum > 0) // the sane case
-		{ as[0] /= sum;
-			as[1] /= sum;
-		}
-		else
-	  { // need to also handle the insane case, though:
-			// where there's no signal that could account for the action the
-			// player took, because they appear to be in a contrary cascade.
-			// This can happen because of influences outside our view.  In this
-			// case we say our player doesn't really know what happened, but
-			// assumes they wouldn't have taken such a contrary action without
-			// a signal to match.
-			as[action] = 1;
-		}
-		LOG_OUT << " -> (" << as[0] << ", " << as[1] << ")\n";
 		return as;
 	}
 
