@@ -1,0 +1,3 @@
+include 50x50.settings
+include 12_neighbors.settings
+update_rule bayesian-with-horizon
