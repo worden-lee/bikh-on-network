@@ -35,17 +35,17 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(RM) $*.out/*.frame.png
 	
 # make animation from bikhitron microstate data
-%.out/microstate.000000.frame.png : %.out/microstate.csv $(BIKHDIR)/lattice-animation.py
-	python $(BIKHDIR)/lattice-animation.py $*.out/microstate.csv
+%/microstate.000000.frame.png : %/microstate.csv $(BIKHDIR)/lattice-animation.py
+	python $(BIKHDIR)/lattice-animation.py $<
 
-%.out/microstate.animation.ogv : %.out/microstate.animation.mpg
+%/microstate.animation.ogv : %/microstate.animation.mpg
 	ffmpeg -i $< -y -vcodec libtheora $@
 
-%.out/microstate.animation.mpg : %.out/microstate.000000.frame.png
-	mencoder mf://$*.out/microstate.*.frame.png -mf type=png:w=800:h=400:fps=20 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o $*.out/microstate.animation.mpg
+%/microstate.animation.mpg : %/microstate.000000.frame.png
+	mencoder mf://$*/microstate.*.frame.png -mf type=png:w=800:h=400:fps=20 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o $@
 
-%.out/microstate.animation.gif : %.out/microstate.000000.frame.png
-	convert -adjoin -delay 10 $*.out/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
+%/microstate.animation.gif : %/microstate.000000.frame.png
+	convert -adjoin -delay 10 $*/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
 
 %.out :
 	mkdir $@
@@ -54,19 +54,22 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # batch simulations
 
-batch-data/batch.csv batch-data/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl
+lattice-batch/batch.csv lattice-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --lattice
 
-#batch-data/summaries.csv : batch-data/batch.csv
-#	sed -n -e 1p -e /^0/p `find batch-data -name summary.csv` > $@
+#lattice-batch/summaries.csv : lattice-batch/batch.csv
+#	sed -n -e 1p -e /^0/p `find lattice-batch -name summary.csv` > $@
 
-batch-data/summaries.mean.png batch-data/summaries.probability.png batch-data/summaries.last.png : batch-data/summaries.csv $(BIKHDIR)/batch-plots.py
+regular-batch/batch.csv regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --regular
+
+%/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
 batch-data :
 	mkdir $@
 
-.PRECIOUS: batch-data batch-data/batch.csv batch-data/summaries.csv
+.PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch lattice-batch/batch.csv regular-batch/summaries.csv
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++

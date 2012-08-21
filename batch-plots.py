@@ -53,7 +53,7 @@ def logchoose(ni, ki):
 
 def make_plots(csv_file):
 	csvreader = csv.reader(open(csv_file,'r'))
-	rows = (csvreader)
+	rows = [csvreader]
 	cols = zip(*csvreader)
 	cols = dict((c[0],c[1:]) for c in cols)
 	print cols.keys()
@@ -97,14 +97,19 @@ def make_plots(csv_file):
 				pr = zip(*(sorted(last_pairs, key = lambda pair: pair[0])))
 				last_plots.append((pr, r, n, nb))
 
+
 	summaries_filename = csv_file.rstrip("csv") + "mean.png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
+	plt.suptitle("Mean density of adoption")
+	plt.xlabel("Probability of positive signal")
 	for pr, r, n, nb in mean_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
-	plt.plot( pr[0], pr[0], 'k,' )
-	plt.suptitle("Mean density of adoption")
+	plt.plot( pr[0], pr[0], 'k,', label="independent" )
+	# caution: this is just using the last value of nb
+	cascade_prob = [ (p*(p+1)*(1- (p*(1-p))**(nb/2)))/(2*(1-p*(1-p))) + (p*(1-p))**(nb/2)/2 for p in pr[0] ]
+	plt.plot( pr[0], cascade_prob, 'k-', label="global cascade" )
 	plt.legend(loc="lower right", prop={"size":8})
 	fig.savefig(summaries_filename);
 
@@ -112,27 +117,89 @@ def make_plots(csv_file):
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
+	plt.suptitle("Probability that majority adopts")
+	plt.xlabel("Probability of positive signal")
 	for pr, r, n, nb in prob_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
 	n = int(cols['population size'][0])
 	ks = range((n+1)/2,n+1)
 	pm = [(sum(exp(logchoose(n,k)+k*log(p)+(n-k)*log(1-p)) for k in ks) if p < 1
 		else 0) for p in pr[0]]
-	plt.plot( pr[0], pm, 'k:')
+	plt.plot( pr[0], pm, 'k:', label="independent" )
+	plt.plot( pr[0], cascade_prob, 'k-', label="global cascade" )
 	plt.xlim(xmax=0.6)
-	plt.suptitle("Probability that majority adopts")
 	plt.legend(loc="lower right", prop={"size":8})
 	fig.savefig(summaries_filename);
-
+  
 	summaries_filename = csv_file.rstrip("csv") + "last.png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
+	plt.suptitle("Probability that last player adopts")
+	plt.xlabel("Probability of positive signal")
 	for pr, r, n, nb in last_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
-	plt.plot( pr[0], pr[0], 'k,' )
-	plt.suptitle("Probability that last player adopts")
+	plt.plot( pr[0], pr[0], 'k,', label="independent")
+	plt.plot( pr[0], cascade_prob, 'k-', label="global cascade" )
 	plt.legend(loc="lower right", prop={"size":8})
+	fig.savefig(summaries_filename);
+  
+	rows.sort(key=lambda row: row[1]) # now re-sort by neighborhood size
+	size_data = []
+	for r, rows_r in groupby((row for row in rows if float(row[0]) == 0.55), lambda row: row[3]):
+		for n, rows_n in groupby(rows_r, lambda row: row[2]):
+			for nb, rows_nb in groupby(rows_n, lambda row: row[1]):
+				ld = [[row[5],row[4]] for row in rows_nb]
+				ld = zip(*ld)
+				lastp = mean(ld[0])
+				dens = mean(ld[1])
+				size_data.append([nb, r, n, lastp, dens])
+	
+	summaries_filename = csv_file.rstrip("csv") + "size-last.png"
+	print summaries_filename
+	fig = plt.figure(figsize=(4,4))
+	plt.subplot(111)
+	size_plots = []
+	size_data.sort(key=lambda row: row[2]) # sort by n
+	size_data.sort(key=lambda row: row[1]) # sort by r
+	print size_data
+	for r, r_rows in groupby(size_data, lambda row: row[1]):
+		for n, n_rows in groupby(r_rows, lambda row: row[2]):
+			nz = [[nb, mean([row[3] for row in nb_rows])]
+				for nb, nb_rows in groupby(n_rows, lambda row: row[0])]
+			n_z = zip(*nz)
+			print n_z
+			plot( n_z[0], n_z[1], label=r )
+	#plt.plot( pr[0], pr[0], 'k,', label="independent" )
+	plt.ylim(ymax=1)
+	plt.suptitle("%g players, p=0.55"%n)
+	plt.ylabel("probability that last player adopts")
+	plt.xlabel("neighbourhood size")
+	plt.legend(loc="lower right", prop={"size":8})
+	plt.subplots_adjust(bottom=.10,left=.14)
+	fig.savefig(summaries_filename);
+	
+	summaries_filename = csv_file.rstrip("csv") + "size-mean.png"
+	print summaries_filename
+	fig = plt.figure(figsize=(4,4))
+	plt.subplot(111)
+	size_plots = []
+	size_data.sort(key=lambda row: row[2]) # sort by n
+	size_data.sort(key=lambda row: row[1]) # sort by r
+	for r, r_rows in groupby(size_data, lambda row: row[1]):
+		for n, n_rows in groupby(r_rows, lambda row: row[2]):
+			nz = [[nb, mean([row[4] for row in nb_rows])]
+				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
+			n_z = zip(*nz)
+			print n_z
+			plot( n_z[0], n_z[1], label=r )
+	#plt.plot( pr[0], pr[0], 'k,' )
+	plt.ylim(ymax=1)
+	plt.suptitle("%g players, p=0.55"%n)
+	plt.ylabel("density of adoption")
+	plt.xlabel("neighbourhood size")
+	plt.legend(loc="lower right", prop={"size":8})
+	plt.subplots_adjust(bottom=.10,left=.18)
 	fig.savefig(summaries_filename);
 
 for csv_file in filenameslist:

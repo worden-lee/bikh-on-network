@@ -30,7 +30,7 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 {
   // ===== do the work =====
 
-  CSVDisplay nodes_csv(parameters.outputDirectory()+"/nodes.csv");
+  CSVDisplay nodes_csv(parameters.outputDirectory()+"/degrees.csv");
   nodes_csv << "vertex" << "in degree" << "out degree";
   nodes_csv.newRow();
   typename graph_traits<network_t>::vertex_iterator it,iend;
@@ -38,6 +38,20 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
   { nodes_csv << *it << in_degree(*it,n) << out_degree(*it,n);
     nodes_csv.newRow();
   }
+
+	if (parameters.initial_graph_type() != "LATTICE")
+	{ CSVDisplay network_csv(parameters.outputDirectory()+"/network.csv");
+		network_csv << "vertex" << "neighbors" << endl;
+		typename graph_traits<network_t>::vertex_iterator vi,vend;
+		for (tie(vi,vend) = vertices(n); vi != vend; ++vi)
+		{ network_csv << *vi;
+			ostringstream nbrs;
+			typename graph_traits<network_t>::adjacency_iterator ai,aend;
+			for (tie(ai,aend) = adjacent_vertices(*vi, n); ai != aend; ++ai)
+				nbrs << *ai << " ";
+			network_csv << nbrs.str() << endl;
+		}
+	}
 
 	CSVDisplay timeseries_csv(parameters.outputDirectory()+"/measurements.csv");
 	timeseries_csv << "t" << "n_adopting" << "proportion_adopting";
@@ -61,9 +75,13 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		  << (cascade_dynamics.state().n_adopting() / 
 				   (double)cascade_dynamics.state().n_decided());
 		timeseries_csv.newRow();
-		if (parameters.initial_graph_type() == "LATTICE")
+		//if (parameters.initial_graph_type() == "LATTICE")
 		{ // fix the hell out of this
-			int dim0 = string_to_unsigned(*parameters.get("lattice_dim_0"));
+			int dim0;
+		  if (parameters.initial_graph_type() == "LATTICE")
+		 	  dim0 = string_to_unsigned(*parameters.get("lattice_dim_0"));
+			else // fake lattice shape for other network
+				dim0 = ceil(sqrt((float)num_vertices(n)));
 			if ( ! cascade_dynamics.already_updated.empty() )
 			{ typename cascade_dynamics_t::vertex_index_t i = 
 					cascade_dynamics.already_updated.back();

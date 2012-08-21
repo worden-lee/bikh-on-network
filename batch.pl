@@ -8,7 +8,7 @@ my $reps = 1000;
 my @prange = (0.5,1);
 my $pstep = 0.01;
 
-my @nblist = (4,8,12);
+my @nblist;
 
 my @rulelist = ("pluralistic-ignorance", "approximate-inference", "bayesian-with-horizon");
 
@@ -20,6 +20,18 @@ if (grep(/^--quick$/,@ARGV))
 if (grep(/^--keep$/,@ARGV)) # this is not so well tested
 { $keep = 1; print "keep\n"; }
 
+my($batchname, $batchargs);
+if (grep(/^--regular$/,@ARGV))
+{ $batchname = "regular"; 
+  $batchargs = " -f regular.settings --n_vertices=1000";
+	@nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
+	@prange = (0.55, 0.55+$pstep/2);
+}
+else # if (grep(/^--lattice$/,@ARGV))
+{ $batchname = "lattice";
+	@nblist = (4,8,12);
+}
+
 my @plist =
  map { $_ * $pstep } (($prange[0]/$pstep) .. ($prange[1]/$pstep));
 
@@ -29,19 +41,25 @@ chomp($pwd);
 my $code_dir = dirname(rel2abs($0));
 
 my @experiments = ("50x50");
-my $batchdir = "$pwd/batch-data";
-my $outdir = "$batchdir";
+my $batchdir = "$pwd/$batchname-batch";
+
+my $outdir = $batchdir;
 
 if (!-e $outdir)
 { mkpath($outdir) or die "couldn't create $outdir";
 }
 
 my $batchcsv = "$batchdir/batch.csv";
-open BATCHCSV, ">>$batchcsv" or die "opening $batchcsv for writing";
-print BATCHCSV "name,experiment,update rule,neighbors,p\n";
+if (-e $batchcsv) {
+	open BATCHCSV, ">>$batchcsv" or die "opening $batchcsv for appending";
+} else {
+	open BATCHCSV, ">$batchcsv" or die "opening $batchcsv for writing";
+	print BATCHCSV "name,experiment,update rule,neighbors,p\n";
+}
 
 print "@explist\n";
 
+my $tmpout = "$batchdir/tmp-out";
 for my $i (1 .. $reps)
 { for my $rule (@rulelist)
 	{ for my $p (@plist)
@@ -51,7 +69,7 @@ for my $i (1 .. $reps)
 				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
 				for my $experiment (@experiments)
 				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
-						"lattice_metric=$metric","p=$p");
+						"lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
 					my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
 					my $dirname = join("/",@extra_dirs);
 					my($catdir, $dest);
@@ -61,31 +79,33 @@ for my $i (1 .. $reps)
 						print BATCHCSV "$dirname,$experiment,$rule,$nb,$p\n";
 						next if (-e $dest);
 					}
-					if (!-e "out") { mkdir("out") or die "couldn't mkdir out"; }
-					system("rm -rf out/*");
-					my $comm = "$code_dir/bikhitron -f $code_dir/settings/$experiment.settings ".
-						join("", map {" --$_" } @extra_args);
+					if (!-e "$tmpout") { mkdir("$tmpout") or die "couldn't mkdir $tmpout"; }
+					system("rm -rf $tmpout/*");
+					my $comm = "$code_dir/bikhitron "
+						. " -f $code_dir/settings/$experiment.settings "
+						. $batchargs . join("", map {" --$_" } @extra_args)
+						. " --outputDirectory=$tmpout";
 					print "$comm\n";
 					system($comm) == 0 or die "error running $comm";
 					## @@ !! double check this is the right file to check for existence !!
-					if (-e "out/settings.csv")
+					if (-e "$tmpout/settings.csv")
 					{ if ($keep)
 						{ if (!-e $catdir) 
 							{ mkpath($catdir) or die "couldn't create $catdir"; }
-							$comm = "cp -r --force --backup=numbered out/ $dest";
+							$comm = "cp -r --force --backup=numbered $tmpout/ $dest";
 							print "$comm\n";
 							system($comm) == 0 or die "error running $comm";
 						}
 						else 
-						{ $seed = `grep randSeed out/settings.csv | sed s/randSeed,//`;
+						{ $seed = `grep randSeed $tmpout/settings.csv | sed s/randSeed,//`;
 							chomp $seed;
 							print BATCHCSV "$seed,$experiment,$rule,$nb,$p\n";
-							rename("out/settings.csv", "$batchdir/settings.$seed.csv");
+							rename("$tmpout/settings.csv", "$batchdir/settings.$seed.csv");
 							if (-e "$batchdir/summaries.csv") {
-								system("sed -n -e 2p out/summary.csv >> $batchdir/summaries.csv");
+								system("sed -n -e 2p $tmpout/summary.csv >> $batchdir/summaries.csv");
 							} else {
 								print "OVERWRITE summaries.csv\n";
-								rename("out/summary.csv", "$batchdir/summaries.csv");
+								rename("$tmpout/summary.csv", "$batchdir/summaries.csv");
 							}
 						}
 					}

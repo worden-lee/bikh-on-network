@@ -61,15 +61,16 @@ public:
 				nv *= string_to_unsigned(*ds);
 			}
 		  setn_vertices(nv);
-			setn_neighbors(compute_n_neighbors());
+		}
+	  if (initial_graph_type() == "LATTICE" && n_neighbors() == 0)
+		{ setn_neighbors(compute_n_neighbors());
 		}
 		Parameters::finishInitialize();
 	}
 
 	void parseSettingsFile(string filename)
-	{ string pathname = filename;
-		if (pathname[0] != '/')
-		{ pathname = dirnameForSettings() + '/' + filename;
+	{ if (filename[0] != '/')
+		{ string pathname = dirnameForSettings() + '/' + filename;
 			struct stat statbuf;
 			if (!stat(pathname.c_str(), &statbuf))
 				return Parameters::parseSettingsFile(pathname);
