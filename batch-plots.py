@@ -104,13 +104,13 @@ def make_plots(csv_file):
 	plt.subplot(111)
 	plt.suptitle("Mean density of adoption")
 	plt.xlabel("Probability of positive signal")
-	plt.xlim(xmax=1)
 	for pr, r, n, nb in mean_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
 	plt.plot( pr[0], pr[0], 'k,', label="independent" )
 	# caution: this is just using the last value of nb
 	cascade_prob = [ (p*(p+1)*(1- (p*(1-p))**(nb/2)))/(2*(1-p*(1-p))) + (p*(1-p))**(nb/2)/2 for p in pr[0] ]
 	plt.plot( pr[0], cascade_prob, 'k--', label="global cascade" )
+	plt.xlim(xmax=1)
 	plt.legend(loc="lower right", prop={"size":8})
 	fig.savefig(summaries_filename);
 
@@ -120,7 +120,6 @@ def make_plots(csv_file):
 	plt.subplot(111)
 	plt.suptitle("Probability that majority adopts")
 	plt.xlabel("Probability of positive signal")
-	plt.xlim(xmax=0.6)
 	for pr, r, n, nb in prob_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
 	n = int(cols['population size'][0])
@@ -129,6 +128,7 @@ def make_plots(csv_file):
 		else 0) for p in pr[0]]
 	plt.plot( pr[0], pm, 'k:', label="independent" )
 	plt.plot( pr[0], cascade_prob, 'k--', label="global cascade" )
+	plt.xlim(xmax=0.6)
 	plt.legend(loc="lower right", prop={"size":8})
 	fig.savefig(summaries_filename);
   
@@ -138,11 +138,11 @@ def make_plots(csv_file):
 	plt.subplot(111)
 	plt.suptitle("Probability that last player adopts")
 	plt.xlabel("Probability of positive signal")
-	plt.xlim(xmax=1)
 	for pr, r, n, nb in last_plots:
 		plt.plot( pr[0], pr[1], label="%d neighbors, %s"%(nb,r) )
 	plt.plot( pr[0], pr[0], 'k,', label="independent")
 	plt.plot( pr[0], cascade_prob, 'k--', label="global cascade" )
+	plt.xlim(xmax=1)
 	plt.legend(loc="lower right", prop={"size":8})
 	fig.savefig(summaries_filename);
   
