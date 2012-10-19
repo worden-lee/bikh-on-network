@@ -66,7 +66,7 @@ regular-batch/batch.csv regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKH
 %/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
-batch-data :
+batch-data %-batch :
 	mkdir $@
 
 .PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch lattice-batch/batch.csv regular-batch/summaries.csv
