@@ -4,25 +4,33 @@
 #include "CascadeParameters.h"
 #include <boost/random/bernoulli_distribution.hpp>
 
+// classes for doing the Bikhchandani and related update rules
+
+// abstract base class
 template<typename network_t, typename params_t>
 class update_rule
 {
 };
 
+// parent class for several variants on the Bikh. process with
+// local interactions
 template<typename network_t, typename params_t, typename rng_t>
 class bikh_on_network_update_rule : public update_rule<network_t, params_t>
 {
 public:
   typedef class node_state {
 	public:
+    // these two are the actual state
 		bool decided;
 		bool adopted;
+    // the rest is extra record-keeping
 		bool cascaded;
 		bool flipped;
 		bool signal;
 		int neighbors_decided;
 		int neighbors_adopted;
 		double time_of_decision;
+
 		node_state() : decided(false), adopted(false), cascaded(false),
 			flipped(false), signal(false), time_of_decision(0) {}
 	}  node_state_t;
@@ -73,6 +81,7 @@ public:
 		state[i].time_of_decision = t;
 	}
 
+  // this is the actual update operation, which is implemented by subclasses
 	virtual void figure_out_update(vertex_index_t i, bool signal,
 			network_t &n, state_container_t &state)
 	{ state[i].adopted = false;
@@ -90,6 +99,12 @@ public:
 
 };
 
+// Pluralistic ignorance is the simple majority approximation: 
+// count all the others' actions together with your signal, and go with
+// either adoption or rejection according to which is the majority.
+// This is a pluralistic ignorance rule because this is what you would
+// get if you incorrectly assume all other players' actions match their
+// private signals.
 template<typename network_t, typename params_t, typename rng_t>
 class pluralistic_ignorance_update_rule : 
 	public bikh_on_network_update_rule<network_t,params_t,rng_t>
@@ -126,7 +141,7 @@ public:
 		}
 		else if (n_up < n_down)
 		{ state[i].adopted = false;
-			if (n_adopted + 1 < n_decided - n_adopted) // would adopt with up signal
+			if (n_adopted + 1 < n_decided - n_adopted) // would reject with up signal
 				state[i].cascaded = true;
 		}
 		else
@@ -143,9 +158,9 @@ public:
 	}
 };
 
-#if 0
+#if 0   // to log messages
 #define LOG_OUT cout
-#else
+#else   // or not to log messages
 #include "boost/iostreams/stream.hpp"
 #include "boost/iostreams/device/null.hpp"
 boost::iostreams::stream< boost::iostreams::null_sink > nullOstream( ( boost::iostreams::null_sink() ) );
@@ -153,7 +168,7 @@ boost::iostreams::stream< boost::iostreams::null_sink > nullOstream( ( boost::io
 #endif
 
 template<typename network_t, typename params_t, typename rng_t>
-class approximate_inference_update_rule : 
+class bikh_log_odds_update_rule : 
 	public bikh_on_network_update_rule<network_t,params_t,rng_t>
 {
 public:
@@ -167,14 +182,16 @@ public:
 	 	bikh_on_network_update_rule<network_t,params_t,rng_t>::compare_times
 		compare_times;
 
-	approximate_inference_update_rule(double p, rng_t &__rng) :
-		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
+  float rho, sigma;
+	bikh_log_odds_update_rule(double p, rng_t &__rng) :
+		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng),
+    rho( log(p/(1-p)) ), sigma( log((1+p)/(2-p)) ) {}
 
 	float sum_of_influences(vector<vertex_index_t>&neighbors, 
 			network_t &n, state_container_t &state, string indent = "")
 	{ 
 		// in order, try to infer their signal from what they were looking at
-		float total_influence = 0;
+		float total_log_odds = 0;
 		//LOG_OUT << indent << "In sum_of_influences with";
 		//for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
 		//	LOG_OUT << ' ' << neighbors[n1];
@@ -195,28 +212,29 @@ public:
 				}
 			}
 			LOG_OUT << "\n";
-			float n1_sum_influence = 
+			float n1_sum_log_odds = 
 				sum_of_influences(n1_neighbors, n, state, indent + "  ");
-			LOG_OUT << indent << "    sum of influences: " << n1_sum_influence << "\n";
+			LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
 
 			// given the sum_influence and their actual action, there are cases.
-			float n1_inferred_signal;
+			float log_alpha_n1;
 			int action = (state[neighbors[n1]].adopted ? 1 : -1);
 			// if the influence is enough to override their signal, we don't
 			// know their signal because they were part of a cascade
-			if (n1_sum_influence * action > 1)
-				n1_inferred_signal = 0;
-			// if the influence is ±1 and they agreed with it, they might have
+			if (n1_sum_log_odds * action > rho)
+				log_alpha_n1 = 0;
+			// if the influence is ± rho and they agreed with it, they might have
 			// flipped a coin
-			else if (n1_sum_influence * action == 1)
-				n1_inferred_signal = action / 3.0;
+			else if (n1_sum_log_odds * action == rho)
+				log_alpha_n1 = action * sigma;
 			// otherwise the influence is too weak and we're seeing their signal.
+      // this includes the "paradoxical" case.
 			else
-				n1_inferred_signal = action;
-			LOG_OUT << indent << "    inferred signal: " << n1_inferred_signal << "\n";
-			total_influence += n1_inferred_signal;
+				log_alpha_n1 = action * rho;
+			LOG_OUT << indent << "    log alpha: " << log_alpha_n1 << "\n";
+			total_log_odds += log_alpha_n1;
 		}
-		return total_influence;
+		return total_log_odds;
 	}
 
 	virtual void figure_out_update(vertex_index_t i, bool signal,
@@ -242,23 +260,24 @@ public:
 		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
 
 		// what are all the neighbors' signals worth to me?
-		float total_influence = sum_of_influences(neighbors, n, state);
+		float total_log_alphas = sum_of_influences(neighbors, n, state);
 
 		// given the total influence and the signal, decide what to do
-		int signed_signal = (signal ? 1 : -1);
-		LOG_OUT << "  total influence = " << total_influence << ": ";
-		if (total_influence + signed_signal > 0)
+		float rho_i = (signal ? rho : -rho);
+		LOG_OUT << "  rho_i = " << rho_i << "\n";
+		LOG_OUT << "  sum of log odds = " << (total_log_alphas + rho_i) << ": ";
+		if (total_log_alphas + rho_i > 0)
 		{ state[i].adopted = true;
 			LOG_OUT << 1;
-			if (total_influence > 1)
+			if (total_log_alphas > rho)
 			{ state[i].cascaded = true;
 				LOG_OUT << " (cascade)";
 			}
 		}
-		else if (total_influence + signed_signal < 0)
+		else if (total_log_alphas + rho_i < 0)
 		{ state[i].adopted = false;
 			LOG_OUT << -1;
-			if (total_influence < -1)
+			if (total_log_alphas < -rho)
 			{ state[i].cascaded = true;
 				LOG_OUT << " (cascade)";
 			}
@@ -269,225 +288,6 @@ public:
 			state[i].flipped = true;
 		}
 	  LOG_OUT << "\n";
-		state[i].neighbors_adopted = n_adopted;
-		state[i].neighbors_decided = n_decided;
-	}
-};
-
-
-template<typename network_t, typename params_t, typename rng_t>
-class bayesian_with_horizon_update_rule : 
-	public bikh_on_network_update_rule<network_t,params_t,rng_t>
-{
-public:
-	typedef typename 
-		bikh_on_network_update_rule<network_t,params_t,rng_t>::state_container_t 
-		state_container_t;
-	typedef typename 
-		bikh_on_network_update_rule<network_t,params_t,rng_t>::vertex_index_t 
-		vertex_index_t;
-	using bikh_on_network_update_rule<network_t,params_t,rng_t>::p;
-	typedef typename
-	 	bikh_on_network_update_rule<network_t,params_t,rng_t>::compare_times
-		compare_times;
-
-	bayesian_with_horizon_update_rule(double p, rng_t &__rng) :
-		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
-
-	// the posterior likelihood that true signal is 1, given an "excess
-	// signal" of k = sum_i (2x_i - 1).
-	float s(int k) 
-	{ return 1.0 / (pow((1-p)/p, k) + 1);
-	}
-
-	// the posterior likelihood that true signal is 1, given a list of
-	// "action probability" pairs for predecessors players, and my signal,
-	// for both possible values of my signal.
-	// this calls itself recursively with information accumulating in 
-	// the "excess signal" k.  Call it from outside with k = 0.
-  vector<float>
-	 	double_V(vector< vector<float> > &action_probabilities,
-						 vector<vertex_index_t> &predecessors, int upto = -2, int k = 0)
-	{ if (predecessors.empty() || upto == -1)
-		{ vector<float> sk(2);
-		  sk[0] = s(k-1);
-		  sk[1] = s(k+1);
-			LOG_OUT << '(' << sk[0] << ", " << sk[1] << ')';
-			return sk;
-		}
-		else
-		{ if (upto < 0) upto = predecessors.size() - 1;
-			vector<float> accum(2,0);
-			LOG_OUT << '(';
-		  if (action_probabilities[upto][0] < 1)
-				LOG_OUT << action_probabilities[upto][0];
-			if (action_probabilities[upto][0] > 0)
-			{ LOG_OUT << ' ';
-				vector<float> vs = 
-					double_V(action_probabilities, predecessors, upto-1, k-1);
-				accum[0] += action_probabilities[upto][0] * vs[0];
-				accum[1] += action_probabilities[upto][0] * vs[1];
-			}
-			LOG_OUT << " +";
-			if (action_probabilities[upto][1] < 1) 
-			  LOG_OUT << ' ' << action_probabilities[upto][1];
-			if (action_probabilities[upto][1] > 0)
-			{ LOG_OUT << ' ';
-				vector<float> vs = 
-					double_V(action_probabilities, predecessors, upto-1, k+1);
-				accum[0] += action_probabilities[upto][1] * vs[0];
-				accum[1] += action_probabilities[upto][1] * vs[1];
-			}
-			LOG_OUT << ')';
-			return accum;
-		}
-	}
-	
-	// Action probability function: probability that player takes action
-	// a (= 0 or 1), given that their likelihood that true signal is up is v.
-	float A(int a, float v)
-	{ float A1;
-		if (v > 0.5)
-			A1 = 1;
-		else if (v == 0.5)
-			A1 = 0.5;
-		else
-			A1 = 0;
-		if (a == 0)
-			return 1 - A1;
-		else
-			return A1;
-	}
-
-	// as below, but converted to likelihoods, i.e. instead of
-	// a_i we use a_i / (a_0 + a_1).
-	vector<float> action_likelihoods(bool action,
-			vector<vertex_index_t> &neighbors,
-			network_t &n, state_container_t &state, string indent = "")
-	{ vector<float> as = action_probabilities(action,
-			neighbors, n, state, indent);
-		float sum = as[0] + as[1];
-		if (sum > 0) // the sane case
-		{ as[0] /= sum;
-			as[1] /= sum;
-		}
-		else
-	  { // need to also handle the insane case, though:
-			// where there's no signal that could account for the action the
-			// player took, because they appear to be in a contrary cascade.
-			// This can happen because of influences outside our view.  In this
-			// case we say our player doesn't really know what happened, but
-			// assumes they wouldn't have taken such a contrary action without
-			// a signal to match.
-			as[action] = 1;
-		}
-		LOG_OUT << " -> (" << as[0] << ", " << as[1] << ")\n";
-		return as;
-	}
-
-	// given that these are the neighbors you can see (who have played
-	// before you), the probability that you take the action mentioned, 
-	// given that your signal is down and given that your signal is up, 
-	// in that order.
-	vector<float> action_probabilities(bool action,
-			vector<vertex_index_t> &neighbors,
-			network_t &n, state_container_t &state, string indent = "")
-	{ // reconstruct everyone's decisions before me
-		vector< vector<float> > neighbor_as( neighbors.size() );
-
-		// for each neighbor n1, try to infer their signal from 
-		// what they were looking at and what they did
-		vector<vertex_index_t> n1_neighbors; // temp list of neighbor's neighbors
-		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
-		{ 
-			// which players were they looking at?
-			n1_neighbors.clear();
-			LOG_OUT << indent << "  neighbor " << neighbors[n1] 
-				<< " (action " << state[neighbors[n1]].adopted << ") sees [";
-			for ( unsigned n2 = 0; n2 < n1; ++n2 )
-			{ typename boost::graph_traits<network_t>::edge_descriptor e;
-				bool edge_exists;
-				tie(e, edge_exists) = edge(neighbors[n1],neighbors[n2],n);
-				if (edge_exists)
-				{ // player n2 was visible to player n1
-					n1_neighbors.push_back(neighbors[n2]);
-					LOG_OUT << ' ' << neighbors[n2];
-				}
-			}
-			LOG_OUT << " ]\n";
-
-			// what could they have done with that information?
-			// Do the likelihood calculation and get the two probabilities:
-			// P(taking the action they did | an up signal)
-			// P(taking the action they did | a down signal)
-			neighbor_as[n1] = action_likelihoods(state[neighbors[n1]].adopted,
-					n1_neighbors, n, state, indent + "  ");
-		}
-		
-		// now given the A values for each neighbor, do the recursive calculation
-		// for likelihood that true value is high.
-		LOG_OUT << indent << "  ";
-		vector<float> vs = double_V(neighbor_as, neighbors);
-		vector<float> as(2);
-		as[0] = A(action, vs[0]);
-		as[1] = A(action, vs[1]);
-	  LOG_OUT << " = (" << vs[0] << ", " << vs[1] << ") => (" 
-			<< as[0] << ", " << as[1] << ")";
-		return as;
-	}
-
-	virtual void figure_out_update(vertex_index_t i, bool signal,
-		 network_t &n, state_container_t &state)
-	{ LOG_OUT << "Update site " << i << " (signal " << signal << "):\n";
-
-		// list everyone in the neighborhood, from first player to last
-		vector<vertex_index_t> neighbors;
-		unsigned n_decided = 0, n_adopted = 0;
-		typename graph_traits<network_t>::adjacency_iterator ai,aend;
-		for (tie(ai,aend) = adjacent_vertices(i, n); ai != aend; ++ai)
-		{ vertex_index_t j = *ai;
-			if (state[j].decided)
-			{ neighbors.push_back(j);
-				++n_decided;
-				if (state[j].adopted)
-					++n_adopted;
-			}
-		}
-		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
-
-		// get the probabilities of adopting depending on my signal
-		vector<float> as = action_probabilities(true, neighbors, n, state);
-		LOG_OUT << '\n';
-
-		// what matters is the answer for my actual signal.
-		float A_i = as[signal];
-		// Adopt if it's > 0.5, flip a coin if = 0.5.
-		if (A_i > 0.5)
-		{ state[i].adopted = 1;
-			LOG_OUT << "  Action: 1";
-			float A_counterfactual = as[!signal];
-			if (A_counterfactual > 0.5)
-			{ state[i].cascaded = 1;
-				LOG_OUT << " in cascade";
-			}
-			LOG_OUT << ".\n";
-		}
-		else if (A_i == 0.5)
-		{ state[i].adopted = bernoulli_distribution<>(0.5)(this->rng);
-			LOG_OUT << "  Coin flip: " << (state[i].adopted ? 1 : 0) << ".\n";
-			state[i].flipped = true;
-		}
-		else
-		{	state[i].adopted = 0;
-			LOG_OUT << "  Action: 0";
-			float A_counterfactual = as[!signal];
-			if (A_counterfactual < 0.5)
-			{	state[i].cascaded = 1;
-				LOG_OUT << " in cascade";
-			}
-			LOG_OUT << ".\n";
-		}
-
 		state[i].neighbors_adopted = n_adopted;
 		state[i].neighbors_decided = n_decided;
 	}

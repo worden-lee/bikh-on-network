@@ -163,16 +163,8 @@ main(int argc, char **argv)
 		pi_dynamics_t pi_dynamics(n, parameters, main_rng);
 		do_cascade(n, pi_dynamics, parameters);
 	}
-	else if (parameters.update_rule() == "approximate-inference")
-	{ typedef approximate_inference_update_rule<network_t, CascadeParameters, rng_t> 
-		  ai_update_rule_t;
-		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
-			ai_update_rule_t, rng_t> ai_dynamics_t;
-		ai_dynamics_t ai_dynamics(n, parameters, main_rng);
-		do_cascade(n, ai_dynamics, parameters);
-	}
-	else if (parameters.update_rule() == "bayesian-with-horizon")
-	{ typedef bayesian_with_horizon_update_rule<network_t, CascadeParameters, rng_t> 
+	else if (parameters.update_rule() == "bayesian")
+	{ typedef bikh_log_odds_update_rule<network_t, CascadeParameters, rng_t> 
 		  bh_update_rule_t;
 		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
 			bh_update_rule_t, rng_t> bh_dynamics_t;
