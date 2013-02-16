@@ -1,0 +1,3 @@
+include 50x50.settings
+include independent.settings
+update_rule bayesian

@@ -41,7 +41,10 @@ def save_frame(data, filename_base, frame_number, nb, rule):
 def make_frames(csv_file):
 	settings_file = csv_file.rstrip("microstate.csv")+"settings.csv"
 	settings = dict(csv.reader(open(settings_file)))
-	nb = settings['n_neighbors']
+	try:
+		nb = settings['n_neighbors']
+	except KeyError:
+		nb = 'all'
 	rule = settings['update_rule']
 	#print settings
 	csvreader = csv.DictReader(open(txt_file,'r'))

@@ -32,7 +32,9 @@ public:
 		double time_of_decision;
 
 		node_state() : decided(false), adopted(false), cascaded(false),
-			flipped(false), signal(false), time_of_decision(0) {}
+			flipped(false), signal(false), 
+      neighbors_decided(0), neighbors_adopted(0),
+      time_of_decision(0) {}
 	}  node_state_t;
 	typedef class state_container : public vector<node_state_t> {
 	public:
@@ -62,7 +64,8 @@ public:
 			return n;
 		}
 	} state_container_t;
-	typedef typename boost::graph_traits<network_t>::vertex_descriptor vertex_index_t;
+	typedef typename boost::graph_traits<network_t>::vertex_descriptor 
+    vertex_index_t;
 	
 	double p;
 	rng_t &rng;
@@ -72,18 +75,18 @@ public:
 	{}
 
 	void update(vertex_index_t i, double t, 
-			network_t &n, state_container_t &state)
+			network_t &n, params_t &params, state_container_t &state)
 	{ boost::bernoulli_distribution<> d(p);
 		boost::variate_generator<rng_t&, boost::bernoulli_distribution<> > choose_signal(rng, d);
 	 	state[i].signal = choose_signal();
-		this->figure_out_update(i, state[i].signal, n, state);
+		this->figure_out_update(i, state[i].signal, n, params, state);
 		state[i].decided = true;
 		state[i].time_of_decision = t;
 	}
 
   // this is the actual update operation, which is implemented by subclasses
 	virtual void figure_out_update(vertex_index_t i, bool signal,
-			network_t &n, state_container_t &state)
+			network_t &n, params_t &params, state_container_t &state)
 	{ state[i].adopted = false;
 	}
 
@@ -121,7 +124,7 @@ public:
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng) {}
 
 	virtual void figure_out_update(vertex_index_t i, bool signal,
-		 network_t &n, state_container_t &state)
+		 network_t &n, params_t &params, state_container_t &state)
 	{ typename graph_traits<network_t>::out_edge_iterator ei,eend;
 		unsigned n_decided = 0, n_adopted = 0;
 		for (tie(ei,eend) = out_edges(i,n); ei != eend; ++ei)
@@ -183,12 +186,14 @@ public:
 		compare_times;
 
   float rho, sigma;
-	bikh_log_odds_update_rule(double p, rng_t &__rng) :
+  vector<float> memoize_sum_of_influences;
+      	bikh_log_odds_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng),
     rho( log(p/(1-p)) ), sigma( log((1+p)/(2-p)) ) {}
 
 	float sum_of_influences(vector<vertex_index_t>&neighbors, 
-			network_t &n, state_container_t &state, string indent = "")
+			network_t &n, params_t &params, 
+      state_container_t &state, string indent = "")
 	{ 
 		// in order, try to infer their signal from what they were looking at
 		float total_log_odds = 0;
@@ -196,6 +201,24 @@ public:
 		//for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
 		//	LOG_OUT << ' ' << neighbors[n1];
 		//LOG_OUT <<"\n";
+
+                // if it's a complete graph, we can cache results and not recompute them,
+                // just based on the number who have played so far
+    static int is_complete = -1;
+    if (is_complete == -1)
+    { const string igt(params.initial_graph_type());
+      is_complete = (igt == "COMPLETE");
+    }
+    if (is_complete)
+    { if (memoize_sum_of_influences.size() <= 0)
+      { memoize_sum_of_influences.resize( num_vertices(n), -HUGE );
+      }
+      int memo_index = neighbors.size();
+      float lookup = memoize_sum_of_influences[memo_index];
+      if (lookup != -HUGE)
+        return lookup;
+    }
+
 		vector<vertex_index_t> n1_neighbors;
 		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
 		{ n1_neighbors.clear();
@@ -213,7 +236,7 @@ public:
 			}
 			LOG_OUT << "\n";
 			float n1_sum_log_odds = 
-				sum_of_influences(n1_neighbors, n, state, indent + "  ");
+				sum_of_influences(n1_neighbors, n, params, state, indent + "  ");
 			LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
 
 			// given the sum_influence and their actual action, there are cases.
@@ -234,11 +257,15 @@ public:
 			LOG_OUT << indent << "    log alpha: " << log_alpha_n1 << "\n";
 			total_log_odds += log_alpha_n1;
 		}
+    if (is_complete)
+    { int memo_index = neighbors.size();
+      memoize_sum_of_influences[memo_index] = total_log_odds;
+    }
 		return total_log_odds;
 	}
 
 	virtual void figure_out_update(vertex_index_t i, bool signal,
-		 network_t &n, state_container_t &state)
+		 network_t &n, params_t &params, state_container_t &state)
 	{ 
 		// reconstruct everyone's decisions and try to infer their signals
 		LOG_OUT << "Update site " << i << " (signal " << signal << "):\n";
@@ -260,7 +287,7 @@ public:
 		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
 
 		// what are all the neighbors' signals worth to me?
-		float total_log_alphas = sum_of_influences(neighbors, n, state);
+		float total_log_alphas = sum_of_influences(neighbors, n, params, state);
 
 		// given the total influence and the signal, decide what to do
 		float rho_i = (signal ? rho : -rho);
@@ -336,7 +363,7 @@ public:
 		vertex_index_t i = yet_to_update.front();
 		yet_to_update.pop_front();
 		already_updated.push_back(i);
-		updater.update(i, _t, n, _state);
+		updater.update(i, _t, n, params, _state);
 		_t += 1;
 	}
 };
