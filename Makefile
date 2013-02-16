@@ -35,7 +35,7 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(RM) $*.out/*.frame.png
 	
 # make animation from bikhitron microstate data
-%/microstate.000000.frame.png : %/microstate.csv $(BIKHDIR)/lattice-animation.py
+%/microstate.000000.frame.png %/microstate.002500.frame.png : %/microstate.csv $(BIKHDIR)/lattice-animation.py
 	python $(BIKHDIR)/lattice-animation.py $<
 
 %/microstate.animation.ogv : %/microstate.animation.mpg
