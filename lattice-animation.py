@@ -15,6 +15,8 @@ from itertools import groupby
 #import subprocess                 # For issuing commands to the OS.
 import os, fnmatch
 import sys
+from matplotlib.text import Text
+import gc
 
 #import memory_profile
 
@@ -26,17 +28,21 @@ filenameslist.sort()
 
 #print filenameslist
 
-number_of_txtfiles = len(filenameslist)
- 
+fig = 0
 def save_frame(data, filename_base, frame_number, nb, rule):
 	frame_filename = filename_base + "%06g.frame.png"%float(frame_number)
 	if ( not os.path.exists(frame_filename) ):
 		print frame_filename
+		global fig
+		if fig != 0:
+			fig.clear();
 		fig = plt.figure(figsize=(4,4))
 		plt.suptitle("%s neighbors, %s"%(nb,rule))
 		plt.subplot(111)
 		plt.imshow(data, interpolation="nearest")
 		fig.savefig(frame_filename)
+		Text.cached = {}
+		gc.collect()
 
 def make_frames(csv_file):
 	settings_file = csv_file.rstrip("microstate.csv")+"settings.csv"
