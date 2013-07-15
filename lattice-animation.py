@@ -29,6 +29,7 @@ filenameslist.sort()
 #print filenameslist
 
 fig = 0
+ 
 def save_frame(data, filename_base, frame_number, nb, rule):
 	frame_filename = filename_base + "%06g.frame.png"%float(frame_number)
 	if ( not os.path.exists(frame_filename) ):
