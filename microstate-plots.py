@@ -27,8 +27,6 @@ else:
 	filenameslist = fnmatch.filter(os.listdir("."),"*.microstate.csv")
 filenameslist.sort()
 
-#print filenameslist
-
 fig = 0
  
 def save_frame(data, filename_base, frame_number, nb, rule):
