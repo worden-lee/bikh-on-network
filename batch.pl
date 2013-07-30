@@ -4,12 +4,11 @@ use File::Spec::Functions qw(rel2abs);
 use File::Basename;
 
 my $reps = 1000;
+#my $reps = 1;
 
 my @prange = (0.5,1);
 my $pstep = 0.01;
-
-my @nblist;
-
+my @nblist = (4,8,12);
 my @rulelist = ("pluralistic-ignorance", "bayesian");
 
 if (grep(/^--quick$/,@ARGV))
@@ -21,15 +20,17 @@ if (grep(/^--keep$/,@ARGV)) # this is not so well tested
 { $keep = 1; print "keep\n"; }
 
 my($batchname, $batchargs);
-if (grep(/^--regular$/,@ARGV))
+if (grep(/^--regular-size$/,@ARGV))
+{ $batchname = "regular-size";
+}
+elsif (grep(/^--regular$/,@ARGV))
 { $batchname = "regular"; 
   $batchargs = " -f regular.settings --n_vertices=1000";
-	@nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
-	@prange = (0.55, 0.55+$pstep/2);
+  @nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
+  @prange = (0.55, 0.55+$pstep/2);
 }
 else # if (grep(/^--lattice$/,@ARGV))
 { $batchname = "lattice";
-	@nblist = (4,8,12);
 }
 
 my @plist =
