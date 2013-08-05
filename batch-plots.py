@@ -56,7 +56,6 @@ def make_plots(csv_file):
 	rows = [csvreader]
 	cols = zip(*csvreader)
 	cols = dict((c[0],c[1:]) for c in cols)
-	print cols.keys()
 	def float_if_possible(x):
 		try:
 			return float(x)
@@ -164,13 +163,11 @@ def make_plots(csv_file):
 	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
-	print size_data
 	for r, r_rows in groupby(size_data, lambda row: row[1]):
 		for n, n_rows in groupby(r_rows, lambda row: row[2]):
 			nz = [[nb, mean([row[3] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda row: row[0])]
 			n_z = zip(*nz)
-			print n_z
 			plot( n_z[0], n_z[1], label=r )
 	#plt.plot( pr[0], pr[0], 'k,', label="independent" )
 	plt.ylim(ymax=1)
@@ -193,7 +190,6 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[4] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
-			print n_z
 			plot( n_z[0], n_z[1], label=r )
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1)
