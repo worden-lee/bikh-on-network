@@ -1,0 +1,4 @@
+include 50x50.settings
+include 4_neighbors.settings
+update_rule pluralistic-ignorance
+include regular.settings
