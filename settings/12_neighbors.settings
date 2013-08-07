@@ -1,2 +1,3 @@
 lattice_metric taxicab
 neighborhood_radius 2
+n_neighbors 12
