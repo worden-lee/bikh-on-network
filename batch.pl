@@ -3,7 +3,7 @@ use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use File::Basename;
 
-my $reps = 100;
+my $reps = 1000;
 #my $reps = 4;
 
 my @prange = (0.5,1);
