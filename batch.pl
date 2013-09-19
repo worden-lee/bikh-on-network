@@ -37,7 +37,7 @@ elsif (grep(/^--regular$/,@ARGV))
 }
 elsif (grep('/--lattice-size$/',$ARGV))
 { $batchname = "lattice-size";
-  $batchargs = ' -f lattice.settings';
+#  $batchargs = ' -f lattice.settings';
   @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
   @prange = (0.55, 0.55+$pstep/2);
   @experiments = ("50x50","100x100");
@@ -82,7 +82,7 @@ for my $i (1 .. $reps)
 			{ my $nr; if ($nb == 12) { $nr = 2; } else { $nr = 1; }
 				my $metric; 
 				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
-				if ($batchname eq "lattice" and $rule eq "bayesian" and $nr == 50) { continue; }
+				if ($batchname eq "lattice" and $rule eq "bayesian" and $nb == 50) { next; }
 				for my $experiment (@experiments)
 				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
 						"lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
