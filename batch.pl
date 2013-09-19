@@ -10,7 +10,8 @@ my @prange = (0.5,1);
 my $pstep = 0.01;
 #my @nblist = (4,8,12);
 my @nblist = (4,12);
-my @rulelist = ("pluralistic-ignorance", "bayesian");
+my @rulelist = ("counting", "bayesian");
+my @experiments = ("50x50");
 
 if (grep(/^--quick$/,@ARGV))
 { $reps = 1; 
@@ -24,15 +25,26 @@ my($batchname, $batchargs);
 if (grep(/^--regular-size$/,@ARGV))
 { $batchname = "regular-size";
   $batchargs = ' -f regular.settings';
-  @nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
+  #@nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
+  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
   @prange = (0.55, 0.55+$pstep/2);
+  @experiments = ("50x50","100x100");
 }
 elsif (grep(/^--regular$/,@ARGV))
 { $batchname = "regular"; 
   $batchargs = " -f regular.settings"; # --n_vertices=2500";
+  @nblist = (4,12,50);
+}
+elsif (grep('/--lattice-size$/',$ARGV))
+{ $batchname = "lattice-size";
+  $batchargs = ' -f lattice.settings';
+  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
+  @prange = (0.55, 0.55+$pstep/2);
+  @experiments = ("50x50","100x100");
 }
 else # if (grep(/^--lattice$/,@ARGV))
 { $batchname = "lattice";
+  @nblist = (4,12,50); # note special case skipping bayesian/50 combination below
 }
 #$batchargs .= " --n_vertices=100";
 
@@ -44,7 +56,6 @@ chomp($pwd);
 
 my $code_dir = dirname(rel2abs($0));
 
-my @experiments = ("50x50");
 my $batchdir = "$pwd/$batchname-batch";
 
 my $outdir = $batchdir;
@@ -71,6 +82,7 @@ for my $i (1 .. $reps)
 			{ my $nr; if ($nb == 12) { $nr = 2; } else { $nr = 1; }
 				my $metric; 
 				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
+				if ($batchname eq "lattice" and $rule eq "bayesian" and $nr == 50) { continue; }
 				for my $experiment (@experiments)
 				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
 						"lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");

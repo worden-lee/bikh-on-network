@@ -35,7 +35,7 @@ public:
 	// probability that a given individual's private signal is accurate
 	DECLARE_PARAM(double, p)
 
-	// what type of process: pluralistic-ignorance, approximate-inference,
+	// what type of process: counting, approximate-inference,
 	// or bayesian-with-horizon
 	DECLARE_PARAM(string, update_rule)
 

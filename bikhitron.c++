@@ -155,7 +155,7 @@ main(int argc, char **argv)
 		//cout << "density: " << density(n) << endl;
 	}
 
-	if (parameters.update_rule() == "pluralistic-ignorance")
+	if (parameters.update_rule() == "counting")
 	{ typedef pluralistic_ignorance_update_rule<network_t, CascadeParameters, rng_t> 
   		pi_update_rule_t;
 		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
