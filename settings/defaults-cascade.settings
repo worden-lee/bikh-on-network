@@ -8,7 +8,7 @@ neighborhood_radius 1
 
 p 0.55
 
-update_rule pluralistic-ignorance
+update_rule counting
 
 print_stuff 1
 print_adjacency_matrix 1
