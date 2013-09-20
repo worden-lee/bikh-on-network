@@ -84,13 +84,13 @@ def make_microstate_plots(csv_file):
 	next_frame_t = 0
 	n_adopted = 0
 	n_counted = 0
-	cumulative_density = []
+	cumulative_mean_density = []
 	for row in csvreader:
 		#if float(row['t']) > 300:
 		#	break
 		n_adopted += int(row['adopted'])
-		++n_counted;
-		cumulative_density = cumulative_density + [ n_adopted / float(n_counted) ]
+		n_counted += 1;
+		cumulative_mean_density = cumulative_mean_density + [ n_adopted / float(n_counted) ]
 		if float(row['t']) >= next_frame_t:
 			save_frame(X, csv_file.rstrip("csv"), next_frame_t, nb, rule)
 			next_frame_t = next_frame_t + 1
@@ -103,10 +103,10 @@ def make_microstate_plots(csv_file):
 	save_frame(X, csv_file.rstrip("csv"), next_frame_t, nb, rule)
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	plt.suptitle("Cumulative probability of adoption")
+	plt.suptitle("Cumulative mean density of adoption")
 	plt.xlabel("Time")
-	plt.plot( arange( 0, 1.0 / length( cumulative_adoption ), 1 ), cumulative_adoption );
-	fig.savefig(csv_file.rstrip("microstate.csv") + 'cumulative-density.png');
+	plt.plot( arange( 0, 1, 1.0/len( cumulative_mean_density ) ), cumulative_mean_density )
+	fig.savefig(csv_file.rstrip("microstate.csv") + 'cumulative-mean-density.png')
 
 for csv_file in filenameslist:
 	make_microstate_plots(csv_file)

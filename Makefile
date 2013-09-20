@@ -35,7 +35,7 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(RM) $*.out/*.frame.png
 	
 # make animation from bikhitron microstate data
-%/cumulative-density.png %/microstate.000000.frame.png %/microstate.002500.frame.png : %/microstate.csv $(BIKHDIR)/microstate-plots.py
+%/cumulative-mean-density.png %/microstate.000000.frame.png %/microstate.002500.frame.png : %/microstate.csv $(BIKHDIR)/microstate-plots.py
 	python $(BIKHDIR)/microstate-plots.py $<
 
 %/microstate.animation.ogv : %/microstate.animation.mpg
