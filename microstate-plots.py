@@ -88,7 +88,7 @@ def make_microstate_plots(csv_file):
 	for row in csvreader:
 		#if float(row['t']) > 300:
 		#	break
-		n_adopted += row['adopted']
+		n_adopted += int(row['adopted'])
 		++n_counted;
 		cumulative_density = cumulative_density + [ n_adopted / float(n_counted) ]
 		if float(row['t']) >= next_frame_t:
