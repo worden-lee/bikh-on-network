@@ -35,8 +35,8 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 	$(RM) $*.out/*.frame.png
 	
 # make animation from bikhitron microstate data
-%/microstate.000000.frame.png %/microstate.002500.frame.png : %/microstate.csv $(BIKHDIR)/lattice-animation.py
-	python $(BIKHDIR)/lattice-animation.py $<
+%/cumulative-density.png %/microstate.000000.frame.png %/microstate.002500.frame.png : %/microstate.csv $(BIKHDIR)/microstate-plots.py
+	python $(BIKHDIR)/microstate-plots.py $<
 
 %/microstate.animation.ogv : %/microstate.animation.mpg
 	ffmpeg -i $< -y -vcodec libtheora $@
