@@ -35,9 +35,8 @@ elsif (grep(/^--regular$/,@ARGV))
   $batchargs = " -f regular.settings"; # --n_vertices=2500";
   @nblist = (4,12,50);
 }
-elsif (grep('/--lattice-size$/',$ARGV))
+elsif (grep(/^--lattice-size$/,@ARGV))
 { $batchname = "lattice-size";
-#  $batchargs = ' -f lattice.settings';
   @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
   @prange = (0.55, 0.55+$pstep/2);
   @experiments = ("50x50","100x100");
