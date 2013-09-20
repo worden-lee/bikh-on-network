@@ -9,7 +9,7 @@ import csv
 from itertools import groupby
 
 # import numpy as np
-import numpy.arange
+from numpy import arange
 
 ### Packages which are necessary to create a movie
  
@@ -105,7 +105,7 @@ def make_microstate_plots(csv_file):
 	plt.subplot(111)
 	plt.suptitle("Cumulative probability of adoption")
 	plt.xlabel("Time")
-	plt.plot( numpy.arange( 0, 1.0 / length( cumulative_adoption ), 1 ), cumulative_adoption );
+	plt.plot( arange( 0, 1.0 / length( cumulative_adoption ), 1 ), cumulative_adoption );
 	fig.savefig(csv_file.rstrip("microstate.csv") + 'cumulative-density.png');
 
 for csv_file in filenameslist:
