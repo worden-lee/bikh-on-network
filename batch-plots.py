@@ -154,7 +154,7 @@ def make_plots(csv_file):
 				ld = zip(*ld)
 				lastp = mean(ld[0])
 				dens = mean(ld[1])
-				prob = (1.0 * len( [r for r in ld[1] if r > 0.5] ) / len(ld[1]))
+				prob = (1.0 * len( [q for q in ld[1] if q > 0.5] ) / len(ld[1]))
 				size_data.append([nb, r, n, lastp, dens, prob])
 	
 	summaries_filename = csv_file.rstrip("csv") + "size-last.png"
@@ -169,13 +169,13 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[3] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda row: row[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label=r )
+			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
 	#plt.plot( pr[0], pr[0], 'k,', label="independent" )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("probability that last player adopts")
 	plt.xlabel("neighbourhood size")
-	plt.legend(loc="upper right", prop={"size":8})
+	plt.legend(loc='upper right', prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.14)
 	fig.savefig(summaries_filename);
 
@@ -191,7 +191,7 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[4] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label=r )
+			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
@@ -213,7 +213,7 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[5] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label=r )
+			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
