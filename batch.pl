@@ -22,13 +22,15 @@ if (grep(/^--keep$/,@ARGV)) # this is not so well tested
 { $keep = 1; print "keep\n"; }
 
 my($batchname, $batchargs);
-if (grep(/^--regular-size$/,@ARGV))
+if (grep(/^--regular-size$/,@ARGV) or grep(/^--regular-size-100$/,@ARGV))
 { $batchname = "regular-size";
   $batchargs = ' -f regular.settings';
   #@nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
-  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
+  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125);
   @prange = (0.55, 0.55+$pstep/2);
-  @experiments = ("50x50","100x100");
+  #@experiments = ("50x50","100x100");
+  if (grep(/^--regular-size-100$/,@ARGV))
+  { @experiments = ("100x100"); }
 }
 elsif (grep(/^--regular$/,@ARGV))
 { $batchname = "regular"; 
@@ -39,7 +41,7 @@ elsif (grep(/^--lattice-size$/,@ARGV))
 { $batchname = "lattice-size";
   @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
   @prange = (0.55, 0.55+$pstep/2);
-  @experiments = ("50x50","100x100");
+  #@experiments = ("50x50","100x100");
 }
 else # if (grep(/^--lattice$/,@ARGV))
 { $batchname = "lattice";
@@ -115,7 +117,7 @@ for my $i (1 .. $reps)
 						{ $seed = `grep randSeed $tmpout/settings.csv | sed s/randSeed,//`;
 							chomp $seed;
 							print BATCHCSV "$seed,$experiment,$rule,$nb,$p\n";
-							rename("$tmpout/settings.csv", "$batchdir/settings.$seed.csv");
+							#rename("$tmpout/settings.csv", "$batchdir/settings.$seed.csv");
 							if (-e "$batchdir/summaries.csv") {
 								system("sed -n -e 2p $tmpout/summary.csv >> $batchdir/summaries.csv");
 							} else {

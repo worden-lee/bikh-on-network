@@ -1,4 +1,4 @@
-# directories to link to
+# directories to link with
 NETWERK ?= ../../netwerk
 NETDYNDIR ?= $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
@@ -69,13 +69,16 @@ lattice-size-batch/batch.csv lattice-size-batch/summaries.csv : $(BIKHDIR)/batch
 regular-size-batch/batch.csv regular-size-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --regular-size
 
-%/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
+regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --regular-size-100
+
+%/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
 batch-data %-batch :
 	mkdir $@
 
-.PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch regular-size-batch lattice-batch/batch.csv regular-batch/summaries.csv regular-size-batch/summaries.csv
+.PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch regular-size-batch lattice-batch/batch.csv regular-batch/summaries.csv regular-size-batch/summaries.csv regular-size-100-batch/summaries.csv
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++

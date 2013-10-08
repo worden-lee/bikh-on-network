@@ -154,7 +154,8 @@ def make_plots(csv_file):
 				ld = zip(*ld)
 				lastp = mean(ld[0])
 				dens = mean(ld[1])
-				size_data.append([nb, r, n, lastp, dens])
+				prob = (1.0 * len( [r for r in ld[1] if r > 0.5] ) / len(ld[1]))
+				size_data.append([nb, r, n, lastp, dens, prob])
 	
 	summaries_filename = csv_file.rstrip("csv") + "size-last.png"
 	print summaries_filename
@@ -174,10 +175,10 @@ def make_plots(csv_file):
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("probability that last player adopts")
 	plt.xlabel("neighbourhood size")
-	plt.legend(loc="lower right", prop={"size":8})
+	plt.legend(loc="upper right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.14)
 	fig.savefig(summaries_filename);
-	
+
 	summaries_filename = csv_file.rstrip("csv") + "size-mean.png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
@@ -196,7 +197,29 @@ def make_plots(csv_file):
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("density of adoption")
 	plt.xlabel("neighbourhood size")
-	plt.legend(loc="lower right", prop={"size":8})
+	plt.legend(loc="upper right", prop={"size":8})
+	plt.subplots_adjust(bottom=.10,left=.18)
+	fig.savefig(summaries_filename);
+
+	summaries_filename = csv_file.rstrip("csv") + "size-probability.png"
+	print summaries_filename
+	fig = plt.figure(figsize=(4,4))
+	plt.subplot(111)
+	size_plots = []
+	size_data.sort(key=lambda row: row[2]) # sort by n
+	size_data.sort(key=lambda row: row[1]) # sort by r
+	for r, r_rows in groupby(size_data, lambda row: row[1]):
+		for n, n_rows in groupby(r_rows, lambda row: row[2]):
+			nz = [[nb, mean([row[5] for row in nb_rows])]
+				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
+			n_z = zip(*nz)
+			plot( n_z[0], n_z[1], label=r )
+	#plt.plot( pr[0], pr[0], 'k,' )
+	plt.ylim(ymax=1)
+	plt.suptitle("%g players, p=0.55"%n)
+	plt.ylabel("probability of majority adoption")
+	plt.xlabel("neighbourhood size")
+	plt.legend(loc="upper right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.18)
 	fig.savefig(summaries_filename);
 
