@@ -169,7 +169,7 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[3] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda row: row[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
+			plot( n_z[0], n_z[1], label=r )
 	#plt.plot( pr[0], pr[0], 'k,', label="independent" )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
@@ -191,7 +191,7 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[4] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
+			plot( n_z[0], n_z[1], label=r )
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
@@ -213,7 +213,7 @@ def make_plots(csv_file):
 			nz = [[nb, mean([row[5] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
-			plot( n_z[0], n_z[1], label="%d neighbours, %s"%(n,r) )
+			plot( n_z[0], n_z[1], label=r )
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)

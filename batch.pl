@@ -26,7 +26,7 @@ if (grep(/^--regular-size$/,@ARGV) or grep(/^--regular-size-100$/,@ARGV))
 { $batchname = "regular-size";
   $batchargs = ' -f regular.settings';
   #@nblist = (2,4,6,8,10,14,17,20,24,27,30,27,30,34);
-  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125);
+  @nblist = (2,5,8,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
   @prange = (0.55, 0.55+$pstep/2);
   #@experiments = ("50x50","100x100");
   if (grep(/^--regular-size-100$/,@ARGV))
@@ -37,11 +37,13 @@ elsif (grep(/^--regular$/,@ARGV))
   $batchargs = " -f regular.settings"; # --n_vertices=2500";
   @nblist = (4,12,50);
 }
-elsif (grep(/^--lattice-size$/,@ARGV))
+elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 { $batchname = "lattice-size";
-  @nblist = (2,5,10,15,20,25,30,35,40,45,50,55,60);
+  @nblist = (2,5,8,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
   @prange = (0.55, 0.55+$pstep/2);
-  #@experiments = ("50x50","100x100");
+  @rulelist = ('counting');
+  if (grep(/^--lattice-size-100$/,@ARGV))
+  { @experiments = ("100x100"); }
 }
 else # if (grep(/^--lattice$/,@ARGV))
 { $batchname = "lattice";

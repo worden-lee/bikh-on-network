@@ -69,6 +69,9 @@ lattice-size-batch/batch.csv lattice-size-batch/summaries.csv : $(BIKHDIR)/batch
 regular-size-batch/batch.csv regular-size-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --regular-size
 
+lattice-size-100-batch/batch.csv lattice-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --lattice-size-100
+
 regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --regular-size-100
 
