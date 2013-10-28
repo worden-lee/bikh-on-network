@@ -42,9 +42,10 @@ elsif (grep(/^--regular$/,@ARGV))
 }
 elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 { $batchname = "lattice-size";
-  @nblist = (2,5,8,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
+  @nblist = (1,2,3,4,5,6,7,8,9,10,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
+  # note there's a special case in the code to skip larger bayesian neighborhoods
   @prange = (0.55, 0.55+$pstep/2);
-  @rulelist = ('counting');
+  #@rulelist = ('counting');
   if (grep(/^--lattice-size-100$/,@ARGV))
   { @experiments = ("100x100"); 
     $batchname = 'lattice-size-100';
@@ -90,7 +91,7 @@ for my $i (1 .. $reps)
 			{ my $nr; if ($nb == 12) { $nr = 2; } else { $nr = 1; }
 				my $metric; 
 				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
-				if ($batchname eq "lattice" and $rule eq "bayesian" and $nb == 50) { next; }
+				if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 20) { next; }
 				for my $experiment (@experiments)
 				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
 						"lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
