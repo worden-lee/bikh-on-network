@@ -191,7 +191,7 @@ def make_plots(csv_file):
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
 			plot( n_z[0], n_z[1], label=r )
-			ymax = max(ymax, n_z[1])
+			ymax = max(ymax, *n_z[1])
 	if ymax > 0.7 :
 		plt.ylim(ymax=1.01)
 	plt.suptitle("%g players, p=0.55"%n)
