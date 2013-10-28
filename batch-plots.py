@@ -161,7 +161,6 @@ def make_plots(csv_file):
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
 	for r, r_rows in groupby(size_data, lambda row: row[1]):
@@ -183,7 +182,6 @@ def make_plots(csv_file):
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
 	ymax = 0
@@ -194,9 +192,8 @@ def make_plots(csv_file):
 			n_z = zip(*nz)
 			plot( n_z[0], n_z[1], label=r )
 			ymax = max(ymax, n_z[1])
-	#plt.plot( pr[0], pr[0], 'k,' )
-	if ( ymax > 0.7 ) :
-		plt.ylim(ymax=1)
+	if ymax > 0.7 :
+		plt.ylim(ymax=1.01)
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("density of adoption")
 	plt.xlabel("neighbourhood size")
@@ -208,7 +205,6 @@ def make_plots(csv_file):
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
 	plt.subplot(111)
-	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
 	ymin = 1
