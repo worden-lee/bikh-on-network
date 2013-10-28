@@ -186,14 +186,17 @@ def make_plots(csv_file):
 	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
+	ymax = 0
 	for r, r_rows in groupby(size_data, lambda row: row[1]):
 		for n, n_rows in groupby(r_rows, lambda row: row[2]):
 			nz = [[nb, mean([row[4] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
 			plot( n_z[0], n_z[1], label=r )
+			ymax = max(ymax, n_z[1])
 	#plt.plot( pr[0], pr[0], 'k,' )
-	plt.ylim(ymax=1)
+	if ( ymax > 0.7 ) :
+		plt.ylim(ymax=1)
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("density of adoption")
 	plt.xlabel("neighbourhood size")
@@ -208,18 +211,24 @@ def make_plots(csv_file):
 	size_plots = []
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
+	ymin = 1
 	for r, r_rows in groupby(size_data, lambda row: row[1]):
 		for n, n_rows in groupby(r_rows, lambda row: row[2]):
 			nz = [[nb, mean([row[5] for row in nb_rows])]
 				for nb, nb_rows in groupby(n_rows, lambda pair: pair[0])]
 			n_z = zip(*nz)
 			plot( n_z[0], n_z[1], label=r )
+			ymin = min(ymin, n_z[1])
 	#plt.plot( pr[0], pr[0], 'k,' )
-	plt.ylim(ymax=1)
+	plt.ylim(ymax=1.01)
 	plt.suptitle("%g players, p=0.55"%n)
 	plt.ylabel("probability of majority adoption")
 	plt.xlabel("neighbourhood size")
-	plt.legend(loc="upper right", prop={"size":8})
+	if ymin < 0.95 :
+		plt.legend(loc="upper right", prop={"size":8})
+	else :
+		plt.ylim(ymin=0.5)
+		plt.legend(loc="lower right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.18)
 	fig.savefig(summaries_filename);
 
