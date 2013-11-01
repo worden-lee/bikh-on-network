@@ -42,7 +42,8 @@ elsif (grep(/^--regular$/,@ARGV))
 }
 elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 { $batchname = "lattice-size";
-  @nblist = (1,2,3,4,5,6,7,8,9,10,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
+  #@nblist = (1,2,3,4,5,6,7,8,9,10,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
+  @nblist = (4,8,12,24,40);
   # note there's a special case in the code to skip larger bayesian neighborhoods
   @prange = (0.55, 0.55+$pstep/2);
   #@rulelist = ('counting');
@@ -88,9 +89,14 @@ for my $i (1 .. $reps)
 { for my $rule (@rulelist)
 	{ for my $p (@plist)
 		{ for my $nb (@nblist)
-			{ my $nr; if ($nb == 12) { $nr = 2; } else { $nr = 1; }
+			{ my $nr; #if ($nb == 12) { $nr = 2; } else { $nr = 1; }
 				my $metric; 
-				if ($nb == 8) { $metric = "infinity"; } else { $metric = "taxicab"; }
+				if ($nb == 4) { $nr = 1; $metric = 'taxicab'; }
+				elsif ($nb == 8) { $nr = 1; $metric = "infinity"; } 
+				elsif ($nb == 12) { $nr = 2; $metric = 'taxicab'; }
+				elsif ($nb == 24) { $nr = 2; $metric = 'infinity'; }
+				elsif ($nb == 40) { $nr = 3; $metric = 'taxicab'; }
+				else { die "unaccountable neighborhood size $nb"; }
 				if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 20) { next; }
 				for my $experiment (@experiments)
 				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
