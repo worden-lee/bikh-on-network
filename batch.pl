@@ -15,8 +15,8 @@ my @experiments = ("50x50");
 
 if (grep(/^--quick$/,@ARGV))
 { $reps = 1; 
-	$pstep = 0.05;
-	print "quick\n"; 
+  $pstep = 0.05;
+  print "quick\n"; 
 }
 if (grep(/^--keep$/,@ARGV)) # this is not so well tested
 { $keep = 1; print "keep\n"; }
@@ -43,7 +43,7 @@ elsif (grep(/^--regular$/,@ARGV))
 elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 { $batchname = "lattice-size";
   #@nblist = (1,2,3,4,5,6,7,8,9,10,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
-  @nblist = (4,8,12,24,40);
+  @nblist = (4,8,12,24,40,48,60,80,120);
   # note there's a special case in the code to skip larger bayesian neighborhoods
   @prange = (0.55, 0.55+$pstep/2);
   #@rulelist = ('counting');
@@ -76,10 +76,10 @@ if (!-e $outdir)
 
 my $batchcsv = "$batchdir/batch.csv";
 if (-e $batchcsv) {
-	open BATCHCSV, ">>$batchcsv" or die "opening $batchcsv for appending";
+  open BATCHCSV, ">>$batchcsv" or die "opening $batchcsv for appending";
 } else {
-	open BATCHCSV, ">$batchcsv" or die "opening $batchcsv for writing";
-	print BATCHCSV "name,experiment,update rule,neighbors,p\n";
+  open BATCHCSV, ">$batchcsv" or die "opening $batchcsv for writing";
+  print BATCHCSV "name,experiment,update rule,neighbors,p\n";
 }
 
 print "@explist\n";
@@ -87,63 +87,68 @@ print "@explist\n";
 my $tmpout = "$batchdir/tmp-out";
 for my $i (1 .. $reps)
 { for my $rule (@rulelist)
-	{ for my $p (@plist)
-		{ for my $nb (@nblist)
-			{ my $nr; #if ($nb == 12) { $nr = 2; } else { $nr = 1; }
-				my $metric; 
-				if ($nb == 4) { $nr = 1; $metric = 'taxicab'; }
-				elsif ($nb == 8) { $nr = 1; $metric = "infinity"; } 
-				elsif ($nb == 12) { $nr = 2; $metric = 'taxicab'; }
-				elsif ($nb == 24) { $nr = 2; $metric = 'infinity'; }
-				elsif ($nb == 40) { $nr = 3; $metric = 'taxicab'; }
-				else { die "unaccountable neighborhood size $nb"; }
-				if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 20) { next; }
-				for my $experiment (@experiments)
-				{ my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
-						"lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
-					my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
-					my $dirname = join("/",@extra_dirs);
-					my($catdir, $dest);
-					if ($keep) {
-						$catdir = "$outdir/".$dirname;
-						$dest = "$catdir/out.$i";
-						print BATCHCSV "$dirname,$experiment,$rule,$nb,$p\n";
-						next if (-e $dest);
-					}
-					if (!-e "$tmpout") { mkdir("$tmpout") or die "couldn't mkdir $tmpout"; }
-					system("rm -rf $tmpout/*");
-					my $comm = "$code_dir/bikhitron "
-						. " -f $code_dir/settings/$experiment.settings "
-						. $batchargs . join("", map {" --$_" } @extra_args)
-						. " --outputDirectory=$tmpout";
-					print "$comm\n";
-					system($comm) == 0 or die "error running $comm";
-					## @@ !! double check this is the right file to check for existence !!
-					if (-e "$tmpout/settings.csv")
-					{ if ($keep)
-						{ if (!-e $catdir) 
-							{ mkpath($catdir) or die "couldn't create $catdir"; }
-							$comm = "cp -r --force --backup=numbered $tmpout/ $dest";
-							print "$comm\n";
-							system($comm) == 0 or die "error running $comm";
-						}
-						else 
-						{ $seed = `grep randSeed $tmpout/settings.csv | sed s/randSeed,//`;
-							chomp $seed;
-							print BATCHCSV "$seed,$experiment,$rule,$nb,$p\n";
-							#rename("$tmpout/settings.csv", "$batchdir/settings.$seed.csv");
-							if (-e "$batchdir/summaries.csv") {
-								system("sed -n -e 2p $tmpout/summary.csv >> $batchdir/summaries.csv");
-							} else {
-								print "OVERWRITE summaries.csv\n";
-								rename("$tmpout/summary.csv", "$batchdir/summaries.csv");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+  { for my $p (@plist)
+    { for my $nb (@nblist)
+      { my $nr = 0;
+        my $metric; 
+	for my $c (1 .. 10)
+	{ my $tnr = $c*$c + ($c+1)*($c+1) - 1;
+	  my $inr = (2*$c+1)*(2*$c+1) - 1;
+	  print STDERR "$tnr, $inr\n";
+	  if ( $nb == $tnr )
+	  { $nr = $c; $metric = 'taxicab'; last; }
+	  elsif ( $nb == $inr )
+	  { $nr = $c; $metric = 'infinity'; last; }
+  	}
+        if ( $nr == 0 ) { die "unaccountable neighborhood size $nb"; }
+        if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 120) 
+	{ die "excessive neighborhood size for lattice $nb"; }
+        for my $experiment (@experiments)
+        { my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
+            "lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
+          my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
+          my $dirname = join("/",@extra_dirs);
+          my($catdir, $dest);
+          if ($keep) {
+            $catdir = "$outdir/".$dirname;
+            $dest = "$catdir/out.$i";
+            print BATCHCSV "$dirname,$experiment,$rule,$nb,$p\n";
+            next if (-e $dest);
+          }
+          if (!-e "$tmpout") { mkdir("$tmpout") or die "couldn't mkdir $tmpout"; }
+          system("rm -rf $tmpout/*");
+          my $comm = "$code_dir/bikhitron "
+            . " -f $code_dir/settings/$experiment.settings "
+            . $batchargs . join("", map {" --$_" } @extra_args)
+            . " --outputDirectory=$tmpout";
+          print "$comm\n";
+          system($comm) == 0 or die "error running $comm";
+          ## @@ !! double check this is the right file to check for existence !!
+          if (-e "$tmpout/settings.csv")
+          { if ($keep)
+            { if (!-e $catdir) 
+              { mkpath($catdir) or die "couldn't create $catdir"; }
+              $comm = "cp -r --force --backup=numbered $tmpout/ $dest";
+              print "$comm\n";
+              system($comm) == 0 or die "error running $comm";
+            }
+            else 
+            { $seed = `grep randSeed $tmpout/settings.csv | sed s/randSeed,//`;
+              chomp $seed;
+              print BATCHCSV "$seed,$experiment,$rule,$nb,$p\n";
+              #rename("$tmpout/settings.csv", "$batchdir/settings.$seed.csv");
+              if (-e "$batchdir/summaries.csv") {
+                system("sed -n -e 2p $tmpout/summary.csv >> $batchdir/summaries.csv");
+              } else {
+                print "OVERWRITE summaries.csv\n";
+                rename("$tmpout/summary.csv", "$batchdir/summaries.csv");
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 # touch the main output directory - useful for make rules sometimes
