@@ -101,8 +101,8 @@ for my $i (1 .. $reps)
 	  { $nr = $c; $metric = 'infinity'; last; }
   	}
         if ( $nr == 0 ) { die "unaccountable neighborhood size $nb"; }
-        if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 120) 
-	{ die "excessive neighborhood size for lattice $nb"; }
+        if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 20) 
+	{ print STDERR "excessive neighborhood size for lattice $nb"; next; }
         for my $experiment (@experiments)
         { my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
             "lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
