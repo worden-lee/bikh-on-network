@@ -103,7 +103,7 @@ for my $rule (@rulelist)
     if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 120) 
     { die "excessive neighborhood size for lattice $nb"; }
     for my $i (1 .. $reps)
-      for my $p (@plist)
+    { for my $p (@plist)
       { for my $experiment (@experiments)
         { my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
             "lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
