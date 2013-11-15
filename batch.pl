@@ -85,25 +85,26 @@ if (-e $batchcsv) {
 print "@explist\n";
 
 my $tmpout = "$batchdir/tmp-out";
-for my $i (1 .. $reps)
-{ for my $rule (@rulelist)
-  { for my $p (@plist)
-    { for my $nb (@nblist)
-      { my $nr = 0;
-        my $metric; 
-	for my $c (1 .. 10)
-	{ my $tnr = $c*$c + ($c+1)*($c+1) - 1;
-	  my $inr = (2*$c+1)*(2*$c+1) - 1;
-	  print STDERR "$tnr, $inr\n";
-	  if ( $nb == $tnr )
-	  { $nr = $c; $metric = 'taxicab'; last; }
-	  elsif ( $nb == $inr )
-	  { $nr = $c; $metric = 'infinity'; last; }
-  	}
-        if ( $nr == 0 ) { die "unaccountable neighborhood size $nb"; }
-        if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 20) 
-	{ print STDERR "excessive neighborhood size for lattice $nb"; next; }
-        for my $experiment (@experiments)
+for my $rule (@rulelist)
+{ # do all the small neighborhoods first, in case we never finish the big ones
+  for my $nb (@nblist)
+  { my $nr = 0;
+    my $metric; 
+    for my $c (1 .. 10)
+    { my $tnr = $c*$c + ($c+1)*($c+1) - 1;
+      my $inr = (2*$c+1)*(2*$c+1) - 1;
+      print STDERR "$tnr, $inr\n";
+      if ( $nb == $tnr )
+      { $nr = $c; $metric = 'taxicab'; last; }
+      elsif ( $nb == $inr )
+      { $nr = $c; $metric = 'infinity'; last; }
+    }
+    if ( $nr == 0 ) { die "unaccountable neighborhood size $nb"; }
+    if ($batchname eq "lattice" and $rule eq "bayesian" and $nb > 120) 
+    { die "excessive neighborhood size for lattice $nb"; }
+    for my $i (1 .. $reps)
+      for my $p (@plist)
+      { for my $experiment (@experiments)
         { my @extra_args = ("update_rule=$rule","neighborhood_radius=$nr",
             "lattice_metric=$metric","n_neighbors=$nb","p=$p","rep=$i");
           my @extra_dirs = ($experiment,"update_rule_$rule","n_neighbors_$nb","p_$p");
