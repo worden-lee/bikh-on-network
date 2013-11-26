@@ -51,6 +51,12 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 %/microstate.animation.gif : %/microstate.000000.frame.png
 	convert -adjoin -delay 10 $*/microstate.*.frame.png -delay 700 `echo $*.out/microstate.*.frame.png | sed 's/.* //'` $@
 
+# use frames from the animation as lattice pictures
+
+# make network picture from simulation output
+%/network.png : %/network.csv ./plot-network.py
+	python ./plot-network.py $< $@
+
 %.out :
 	mkdir $@
 
