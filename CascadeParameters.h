@@ -7,7 +7,7 @@
 class CascadeParameters : public Parameters
 {
 public:
-  // ===== declarations of parameters =====
+	// ===== declarations of parameters =====
 
 	// what kind of structure - lattice, network, global
 	DECLARE_PARAM(string, initial_graph_type)
@@ -29,54 +29,59 @@ public:
 	// diamond in "infinity" metric
 	DECLARE_PARAM(string, lattice_metric)
 
-  // whether coordinates wrap around edges
-  DECLARE_PARAM(bool, lattice_is_torus)
+	// whether coordinates wrap around edges
+	DECLARE_PARAM(bool, lattice_is_torus)
 
 	// probability that a given individual's private signal is accurate
 	DECLARE_PARAM(double, p)
 
-	// what type of process: counting, approximate-inference,
-	// or bayesian-with-horizon
+	// what type of process: counting, bayesian, 
+	// bayesian-same-neighborhood, bayesian-closure
 	DECLARE_PARAM(string, update_rule)
 
-	unsigned compute_n_neighbors(void)
-	{ unsigned nr = neighborhood_radius();
+	// in case of the counting closure: what level of recursion to close at
+	DECLARE_PARAM(double, inference_closure_level)
+
+	unsigned compute_n_neighbors(void) {
+	       	unsigned nr = neighborhood_radius();
 		string metric = lattice_metric();
-		if (metric == "infinity")
+		if (metric == "infinity") {
 			return (2*nr+1)*(2*nr+1) - 1;
-		else if (metric == "taxicab")
+		} else if (metric == "taxicab") {
 			return 4 * nr * (nr+1) / 2;
-		else
-		{ cerr << "unknown lattice_metric\n";
+		} else {
+		       	cerr << "unknown lattice_metric\n";
 			return -1;
 		}
 	}
 
-	void finishInitialize()
-	{ if (initial_graph_type() == "LATTICE" && n_vertices() == 0)
-		{ int nv = 1;
-			for (int i = lattice_dimensions() - 1; i >= 0; --i)
-			{ const string *ds = get(string("lattice_dim_")+fstring("%u",i));
+	void finishInitialize() {
+	       	if (initial_graph_type() == "LATTICE" && n_vertices() == 0) {
+		       	int nv = 1;
+			for (int i = lattice_dimensions() - 1; i >= 0; --i) {
+			       	const string *ds = get(string("lattice_dim_")+fstring("%u",i));
 				if (!ds) ds = get("lattice_dim_generic");
 				nv *= string_to_unsigned(*ds);
 			}
-		  setn_vertices(nv);
+			setn_vertices(nv);
 		}
-	  if (initial_graph_type() == "LATTICE" && n_neighbors() == 0)
-		{ setn_neighbors(compute_n_neighbors());
+		if (initial_graph_type() == "LATTICE" && n_neighbors() == 0) {
+		       	setn_neighbors(compute_n_neighbors());
 		}
 		Parameters::finishInitialize();
 	}
 
-	void parseSettingsFile(string filename)
-	{ if (filename[0] != '/')
-		{ string pathname = dirnameForSettings() + '/' + filename;
+	void parseSettingsFile(string filename) {
+	       	if (filename[0] != '/') {
+		       	string pathname = dirnameForSettings() + '/' + filename;
 			struct stat statbuf;
-			if (!stat(pathname.c_str(), &statbuf))
+			if (!stat(pathname.c_str(), &statbuf)) {
 				return Parameters::parseSettingsFile(pathname);
+			}
 			pathname = dirnameForSettings() + "/settings/" + filename;
-			if (!stat(pathname.c_str(), &statbuf))
+			if (!stat(pathname.c_str(), &statbuf)) {
 				return Parameters::parseSettingsFile(pathname);
+			}
 		}
 		return Parameters::parseSettingsFile(filename);
 	}

@@ -26,29 +26,29 @@ using namespace std;
 
 template<typename network_t, typename cascade_dynamics_t, typename params_t>
 void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
-		params_t &parameters)
-{
-  // ===== do the work =====
+		params_t &parameters) {
+	// ===== do the work =====
 
-  CSVDisplay nodes_csv(parameters.outputDirectory()+"/degrees.csv");
-  nodes_csv << "vertex" << "in degree" << "out degree";
-  nodes_csv.newRow();
-  typename graph_traits<network_t>::vertex_iterator it,iend;
-  for (tie(it,iend) = vertices(n); it != iend; ++it)
-  { nodes_csv << *it << in_degree(*it,n) << out_degree(*it,n);
-    nodes_csv.newRow();
-  }
+	CSVDisplay nodes_csv(parameters.outputDirectory()+"/degrees.csv");
+	nodes_csv << "vertex" << "in degree" << "out degree";
+	nodes_csv.newRow();
+	typename graph_traits<network_t>::vertex_iterator it,iend;
+	for (tie(it,iend) = vertices(n); it != iend; ++it) { 
+		nodes_csv << *it << in_degree(*it,n) << out_degree(*it,n);
+		nodes_csv.newRow();
+	}
 
-	if (parameters.initial_graph_type() != "LATTICE")
-	{ CSVDisplay network_csv(parameters.outputDirectory()+"/network.csv");
+	if (parameters.initial_graph_type() != "LATTICE") {
+	       	CSVDisplay network_csv(parameters.outputDirectory()+"/network.csv");
 		network_csv << "vertex" << "neighbors" << endl;
 		typename graph_traits<network_t>::vertex_iterator vi,vend;
-		for (tie(vi,vend) = vertices(n); vi != vend; ++vi)
-		{ network_csv << *vi;
+		for (tie(vi,vend) = vertices(n); vi != vend; ++vi) {
+		       	network_csv << *vi;
 			ostringstream nbrs;
 			typename graph_traits<network_t>::adjacency_iterator ai,aend;
-			for (tie(ai,aend) = adjacent_vertices(*vi, n); ai != aend; ++ai)
+			for (tie(ai,aend) = adjacent_vertices(*vi, n); ai != aend; ++ai) {
 				nbrs << *ai << " ";
+			}
 			network_csv << nbrs.str() << endl;
 		}
 	}
@@ -69,21 +69,22 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		<< "decided" << "signal" << "adopted" << "cascaded" << "flipped"
 		<< "neighbors decided" << "neighbors adopted" << endl;
 
-	while (1)
-	{ timeseries_csv << cascade_dynamics.t() 
+	while (1) {
+	       	timeseries_csv << cascade_dynamics.t() 
 			<< cascade_dynamics.state().n_adopting()
-		  << (cascade_dynamics.state().n_adopting() / 
-				   (double)cascade_dynamics.state().n_decided());
+			<< (cascade_dynamics.state().n_adopting() / 
+					 (double)cascade_dynamics.state().n_decided());
 		timeseries_csv.newRow();
-		//if (parameters.initial_graph_type() == "LATTICE")
-		{ // fix the hell out of this
+		//if (parameters.initial_graph_type() == "LATTICE") {
+		// fix the hell out of this
 			int dim0;
-		  if (parameters.initial_graph_type() == "LATTICE")
-		 	  dim0 = string_to_unsigned(*parameters.get("lattice_dim_0"));
-			else // fake lattice shape for other network
+			if (parameters.initial_graph_type() == "LATTICE") {
+		 		dim0 = string_to_unsigned(*parameters.get("lattice_dim_0"));
+			} else { // fake lattice shape for other network
 				dim0 = ceil(sqrt((float)num_vertices(n)));
-			if ( ! cascade_dynamics.already_updated.empty() )
-			{ typename cascade_dynamics_t::vertex_index_t i = 
+			}
+			if ( ! cascade_dynamics.already_updated.empty() ) {
+			       	typename cascade_dynamics_t::vertex_index_t i = 
 					cascade_dynamics.already_updated.back();
 				int x = i % dim0, y = i / dim0;
 				microstate_csv << cascade_dynamics.t() << x << y << i
@@ -96,9 +97,10 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 					<< cascade_dynamics.state()[i].neighbors_adopted 
 					<< endl;
 			}
-		}
-		if (cascade_dynamics.state().n_decided() >= num_vertices(n))
+		//}
+		if (cascade_dynamics.state().n_decided() >= num_vertices(n)) {
 			break;
+		}
 		cascade_dynamics.step();
 	}
 
@@ -110,68 +112,78 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		<< parameters.p() << parameters.n_neighbors() 
 		<< parameters.update_rule() << num_vertices(n)
 		<< (cascade_dynamics.state().n_adopting() /
-				 (double)cascade_dynamics.state().n_decided())
+			 (double)cascade_dynamics.state().n_decided())
 		<< (cascade_dynamics.state().n_cascading() /
-				 (double)cascade_dynamics.state().n_decided())
+			 (double)cascade_dynamics.state().n_decided())
 		<< cascade_dynamics.state()[cascade_dynamics.already_updated.back()].adopted
 		<< endl;
 }
 
 // ------------------------------------------------------------------------
-//  main
+//	main
 // ------------------------------------------------------------------------
 
-int
-main(int argc, char **argv)
-{  
-  // ===== initialize =====
+int main(int argc, char **argv) {	
+	// ===== initialize =====
 	CascadeParameters parameters;
-  parameters.handleArgs(argc,argv,"settings/defaults-cascade.settings");
-  parameters.afterSetting();
-	parameters.finishInitialize();
-	{ ofstream settings_csv((parameters.outputDirectory()+"/settings.csv").c_str());
+	parameters.handleArgs(argc,argv,"settings/defaults-cascade.settings");
+	parameters.afterSetting();
+	parameters.finishInitialize(); {
+	       	ofstream settings_csv((parameters.outputDirectory()+"/settings.csv").c_str());
 		parameters.writeAllSettingsAsCSV(settings_csv);
 	}
 
 	rng_t main_rng;
 
 	cout << "randSeed is " << parameters.randSeed() << endl;
-  main_rng.seed(parameters.randSeed());
-  // rand() is used in random_shuffle()
-  srand(parameters.randSeed());
-  
-  // ===== create a random or custom graph =====
+	main_rng.seed(parameters.randSeed());
+	// rand() is used in random_shuffle()
+	srand(parameters.randSeed());
+	
+	// ===== create a random or custom graph =====
 	typedef adjacency_list<setS,vecS,bidirectionalS> network_t;
-  network_t n(parameters.n_vertices());
-	// network created empty, now initialize it  
+	network_t n(parameters.n_vertices());
+	// network created empty, now initialize it	
 	//n.inheritParametersFrom(parameters);
 	construct_network(n,parameters,main_rng);
 
-	if (parameters.print_stuff())
-	{ if (parameters.print_adjacency_matrix())
-		{ cout << "network:\n";
+	if (parameters.print_stuff()) {
+	       	if (parameters.print_adjacency_matrix()) {
+		       	cout << "network:\n";
 			print_object(n,cout);
 		}
 		//cout << "density: " << density(n) << endl;
 	}
 
-	if (parameters.update_rule() == "counting")
-	{ typedef pluralistic_ignorance_update_rule<network_t, CascadeParameters, rng_t> 
-  		pi_update_rule_t;
+	if (parameters.update_rule() == "counting") {
+	       	typedef counting_update_rule<network_t, CascadeParameters, rng_t>
+			update_rule_t;
 		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
-			pi_update_rule_t, rng_t> pi_dynamics_t;
-		pi_dynamics_t pi_dynamics(n, parameters, main_rng);
-		do_cascade(n, pi_dynamics, parameters);
-	}
-	else if (parameters.update_rule() == "bayesian")
-	{ typedef bikh_log_odds_update_rule<network_t, CascadeParameters, rng_t> 
-		  bh_update_rule_t;
+			update_rule_t, rng_t> dynamics_t;
+		dynamics_t dynamics(n, parameters, main_rng);
+		do_cascade(n, dynamics, parameters);
+	} else if (parameters.update_rule() == "bayesian") {
+	       	typedef bikh_log_odds_update_rule<network_t, CascadeParameters, rng_t> 
+			update_rule_t;
 		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
-			bh_update_rule_t, rng_t> bh_dynamics_t;
-		bh_dynamics_t bh_dynamics(n, parameters, main_rng);
-		do_cascade(n, bh_dynamics, parameters);
-	}
-	else
-	{ cerr << "error: what is the update rule??" << endl;
+			update_rule_t, rng_t> dynamics_t;
+		dynamics_t dynamics(n, parameters, main_rng);
+		do_cascade(n, dynamics, parameters);
+	} else if (parameters.update_rule() == "bayesian-same-neighborhood") {
+	       	typedef same_neighborhood_log_odds_update_rule<network_t, CascadeParameters, rng_t> 
+			update_rule_t;
+		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
+			update_rule_t, rng_t> dynamics_t;
+		dynamics_t dynamics(n, parameters, main_rng);
+		do_cascade(n, dynamics, parameters);
+	} else if (parameters.update_rule() == "bayesian-closure") {
+	       	typedef counting_closure_log_odds_update_rule<network_t, CascadeParameters, rng_t> 
+			update_rule_t;
+		typedef update_everyone_once_dynamics<network_t, CascadeParameters, 
+			update_rule_t, rng_t> dynamics_t;
+		dynamics_t dynamics(n, parameters, main_rng);
+		do_cascade(n, dynamics, parameters);
+	} else {
+	       	cerr << "error: what is the update rule??" << endl;
 	}
 }
