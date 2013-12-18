@@ -10,7 +10,8 @@ my @prange = (0.5,1);
 my $pstep = 0.01;
 #my @nblist = (4,8,12);
 my @nblist = (4,12);
-my @rulelist = ("counting", "bayesian");
+#my @rulelist = ("counting", "bayesian");
+my @rulelist = ('bayesian-closure', 'bayesian-same-neighborhood', 'bayesian');
 my @experiments = ("50x50");
 
 if (grep(/^--quick$/,@ARGV))

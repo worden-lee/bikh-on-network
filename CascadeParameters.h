@@ -40,7 +40,7 @@ public:
 	DECLARE_PARAM(string, update_rule)
 
 	// in case of the counting closure: what level of recursion to close at
-	DECLARE_PARAM(double, inference_closure_level)
+	DECLARE_PARAM(unsigned, inference_closure_level)
 
 	unsigned compute_n_neighbors(void) {
 	       	unsigned nr = neighborhood_radius();

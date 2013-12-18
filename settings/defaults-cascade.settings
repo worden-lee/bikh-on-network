@@ -10,6 +10,8 @@ p 0.55
 
 update_rule counting
 
+inference_closure_level 3
+
 print_stuff 1
 print_adjacency_matrix 1
 outputDirectory out

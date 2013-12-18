@@ -3,6 +3,7 @@
 #include "BoostDotDisplay.h"
 #include "CascadeParameters.h"
 #include <boost/random/bernoulli_distribution.hpp>
+using namespace std;
 
 // classes for doing the Bikhchandani and related update rules
 
@@ -176,8 +177,8 @@ public:
 #else   // or not to log messages
 #include "boost/iostreams/stream.hpp"
 #include "boost/iostreams/device/null.hpp"
-boost::iostreams::stream< boost::iostreams::null_sink > nullOstream( ( boost::iostreams::null_sink() ) );
-#define LOG_OUT nullOstream
+boost::iostreams::stream< boost::iostreams::null_sink > null_ostream( ( boost::iostreams::null_sink() ) );
+#define LOG_OUT null_ostream
 #endif
 
 // This is the Bikhchandani et al model, extended to consider
@@ -191,7 +192,7 @@ boost::iostreams::stream< boost::iostreams::null_sink > nullOstream( ( boost::io
 // they themselves can't see, so they proceed as if the neighbors' neighborhood
 // is limited to the intersection of the neighbor's true neighborhood with
 // their own neighborhood.
-// This leads to a computational complexity explosion, because the likelihood
+// This leads to a combinatorial explosion, because the likelihood
 // calculation has to be done over and over for many different subsets of each
 // player's neighborhood.
 template<typename network_t, typename params_t, typename rng_t>
@@ -209,11 +210,12 @@ public:
 		compare_times;
 
 	float rho, sigma;
-	vector<float> memoize_sum_of_influences;
+	map<vertex_index_t,float> *memoize_sum_of_influences_p;
 
       	bikh_log_odds_update_rule(double p, rng_t &__rng) :
 		bikh_on_network_update_rule<network_t,params_t,rng_t>(p,__rng),
-		rho( log(p/(1-p)) ), sigma( log((1+p)/(2-p)) ) {}
+		rho( log(p/(1-p)) ), sigma( log((1+p)/(2-p)) ),
+	       	memoize_sum_of_influences_p(NULL) {}
 
 	// Given someone on the network, we figure out what they'll do
 	// by looking at each of their neighbors, and reconstructing what
@@ -222,22 +224,35 @@ public:
 	// just who their neighbors actually are, that would be too easy, but
 	// who this person thinks that person's neighbors are, which is the
 	// intersection of the two people's neighborhoods.
+	// The caller expects this to return only:
+	//   nodes connected to n1
+	//   which took action before n1 did
 	// n1: the person whose neighborhood we want
 	// all_neighbors: restricted to this universe
 	// n: the network
 	// n1_neighbors: container where answer will be returned
 	virtual void construct_neighbors_neighbors( vertex_index_t n1,
-			vector<vertex_index_t> &all_neighbors,
+			set<vertex_index_t> &all_neighbors,
 			network_t &n,
-			vector<vertex_index_t> &n1_neighbors ) {
-		for ( unsigned n2 = 0; n2 < n1; ++n2 ) {
+			set<vertex_index_t> &n1_neighbors,
+			state_container_t &state,
+		       	string indent) {
+		LOG_OUT << indent << "  construct neighbors of " << n1 << ':';
+		for ( typename set<vertex_index_t>::iterator n2i = all_neighbors.begin(); 
+		      n2i != all_neighbors.end(); ++n2i ) {
+			vertex_index_t n2 = *n2i;
 			typename boost::graph_traits<network_t>::edge_descriptor e;
 			bool edge_exists;
-			tie(e, edge_exists) = edge(all_neighbors[n1],all_neighbors[n2],n);
-			if (edge_exists) {
-				n1_neighbors.push_back(all_neighbors[n2]);
+			tie(e, edge_exists) = edge(n1,n2,n);
+			if (edge_exists && state[n2].decided && 
+			    state[n2].time_of_decision < state[n1].time_of_decision) {
+				n1_neighbors.insert(n2);
+				LOG_OUT << ' ' << n2;
+			} else {
+				LOG_OUT << " (" << n2 << ')';
 			}
 		}
+		LOG_OUT << endl;
 	}
 
 	// sum_of_influences is called recursively.  Given the neighbors
@@ -245,54 +260,41 @@ public:
 	// and what we can infer about each of their signals.  Return the
 	// sum of log odds expressing the likelihood that the true signal
 	// is positive, given that information.
-	virtual float sum_of_influences(vector<vertex_index_t>&neighbors, 
+	virtual float sum_of_influences(set<vertex_index_t>&neighbors, 
+			vertex_index_t n0,
 			network_t &n, params_t &params, 
 			state_container_t &state, string indent = "") { 
 		// in order, try to infer their signal from what they were looking at
 		float total_log_odds = 0;
-		//LOG_OUT << indent << "In sum_of_influences with";
-		//for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 )
-		//	LOG_OUT << ' ' << neighbors[n1];
-		//LOG_OUT <<"\n";
 
                 // if we're in a complete graph, we can cache results and not recompute them,
                 // just based on the number who have played so far
-		static int is_complete = -1;
-		if (is_complete == -1) {
-		       	const string igt(params.initial_graph_type()); 
-			is_complete = (igt == "COMPLETE");
-		}
-		if (is_complete) {
-		       	if (memoize_sum_of_influences.size() <= 0) {
-			       	memoize_sum_of_influences.resize( num_vertices(n), -HUGE );
-			}
-			int memo_index = neighbors.size();
-			float lookup = memoize_sum_of_influences[memo_index];
-			if (lookup != -HUGE) {
-				return lookup;
-			}
+		if (memoize_sum_of_influences_p && memoize_sum_of_influences_p->count(n0) > 0) {
+			float lookup = (*memoize_sum_of_influences_p)[n0];
+			LOG_OUT << indent << "  sum_of_influences(" << n0 << ") memoized: " << lookup << endl;
+			return lookup;
 		}
 
 		// Now compute the log odds likelihood thing for each of
 		// the neighbors we're given
-		vector<vertex_index_t> n1_neighbors;
-		for ( unsigned n1 = 0; n1 < neighbors.size(); ++n1 ) {
+		set<vertex_index_t> n1_neighbors;
+		for ( typename set<vertex_index_t>::iterator n1i = neighbors.begin(); n1i != neighbors.end(); ++n1i ) {
 			// Construct vector of that person's neighbors
 			// (those that are in the set of neighbors we're given)
 		       	n1_neighbors.clear();
-			construct_neighbors_neighbors( n1, neighbors, n, n1_neighbors );
+			construct_neighbors_neighbors( *n1i, neighbors, n, n1_neighbors, state, indent + "  " );
 
 			// Get the sum_of_influences log likelihood for
 			// neighbor's neighbors, recursively.
 			float n1_sum_log_odds = 
-				sum_of_influences(n1_neighbors, n, params, state, indent + "  ");
+				sum_of_influences(n1_neighbors, *n1i, n, params, state, indent + "  ");
 			LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
 
 			// given the neighbor's influences and their actual 
 			// action, there are cases giving us this neighbor's
 			// contribution to the log odds.
 			float log_alpha_n1;
-			int action = (state[neighbors[n1]].adopted ? 1 : -1);
+			int action = (state[*n1i].adopted ? 1 : -1);
 			if (n1_sum_log_odds * action > rho) {
 				// if the influence is enough to override their signal, we don't
 				// know their signal because they were part of a cascade
@@ -306,13 +308,12 @@ public:
 				// this includes the "paradoxical" case.
 				log_alpha_n1 = action * rho;
 			}
-			LOG_OUT << indent << "    log alpha: " << log_alpha_n1 << "\n";
+			LOG_OUT << indent << "  log alpha (" << n1 << "): " << log_alpha_n1 << "\n";
 			// We simply add that to the total log odds.
 			total_log_odds += log_alpha_n1;
 		}
-		if (is_complete) {
-		       	int memo_index = neighbors.size();
-			memoize_sum_of_influences[memo_index] = total_log_odds;
+		if (memoize_sum_of_influences_p) {
+			(*memoize_sum_of_influences_p)[n0] = total_log_odds;
 		}
 		return total_log_odds;
 	}
@@ -324,7 +325,7 @@ public:
 
 		// get everyone in the neighborhood, from first to play, to last
 		typename graph_traits<network_t>::adjacency_iterator ai,aend;
-		vector<vertex_index_t> neighbors;
+		set<vertex_index_t> neighbors;
 		unsigned n_decided = 0, n_adopted = 0;
 		for (tie(ai,aend) = adjacent_vertices(i, n); ai != aend; ++ai) {
 		       	vertex_index_t j = *ai;
@@ -333,14 +334,23 @@ public:
 				if (state[j].adopted) {
 					++n_adopted;
 				}
-				neighbors.push_back(j);
+				neighbors.insert(j);
 			}
 		}
 		unsigned n_up = 0, n_down = 0;
-		sort( neighbors.begin(), neighbors.end(), compare_times(state) );
+		//sort( neighbors.begin(), neighbors.end(), compare_times(state) );
 
+		if ( memoize_sum_of_influences_p == NULL ) {
+			static string igt = "";
+			if (igt == "") {
+				igt = params.initial_graph_type(); 
+			}
+			if (igt == "COMPLETE") {
+				memoize_sum_of_influences_p = new map<vertex_index_t,float>;
+			}
+		}
 		// what are all the neighbors' signals worth to me?
-		float total_log_alphas = sum_of_influences(neighbors, n, params, state);
+		float total_log_alphas = sum_of_influences(neighbors, i, n, params, state, "");
 
 		// given the total influence and the signal, decide what to do
 		float rho_i = (signal ? rho : -rho);
@@ -385,6 +395,9 @@ public:
 	typedef typename 
 		bikh_on_network_update_rule<network_t,params_t,rng_t>::vertex_index_t 
 		vertex_index_t;
+	typedef typename 
+		bikh_on_network_update_rule<network_t,params_t,rng_t>::state_container_t 
+		state_container_t;
 	typedef typename
 	 	bikh_on_network_update_rule<network_t,params_t,rng_t>::compare_times
 		compare_times;
@@ -392,11 +405,42 @@ public:
 	same_neighborhood_log_odds_update_rule(double p, rng_t &__rng) :
 		bikh_log_odds_update_rule<network_t,params_t,rng_t>(p, __rng) {}
 
+	// unlike the standard construct_neighbors_neighbors, which constructs the
+	// intersection of neighborhood(n1) and neighborhood(n2), here we just say
+	// n2's neighborhood is everyone in neighborhood(n1) who played before n2 did.
+	// We also use memoize to let n1 reuse the inferences that n2 generates, which
+	// allows us to save a whole lot of time.
 	virtual void construct_neighbors_neighbors( vertex_index_t n1,
-			vector<vertex_index_t> &all_neighbors,
+			set<vertex_index_t> &all_neighbors,
 			network_t &n,
-			vector<vertex_index_t> &n1_neighbors ) {
-		std::copy( all_neighbors.begin(), all_neighbors.end(), n1_neighbors.begin() );
+			set<vertex_index_t> &n1_neighbors,
+			state_container_t &state,
+		       	string indent) {
+		LOG_OUT << indent << "  construct neighbors of " << n1 << ':';
+		for ( typename set<vertex_index_t>::iterator n2i = all_neighbors.begin(); 
+		      n2i != all_neighbors.end(); ++n2i ) {
+			vertex_index_t n2 = *n2i;
+			if (state[n2].decided && 
+			    state[n2].time_of_decision < state[n1].time_of_decision) {
+				n1_neighbors.insert(n2);
+				LOG_OUT << ' ' << n2;
+			} else {
+				LOG_OUT << " (" << n2 << ')';
+			}
+		}
+		LOG_OUT << endl;
+	}
+	
+	using bikh_log_odds_update_rule<network_t,params_t,rng_t>::memoize_sum_of_influences_p;
+
+	virtual void figure_out_update(vertex_index_t i, bool signal,
+		network_t &n, params_t &params, state_container_t &state) { 
+		if ( memoize_sum_of_influences_p == NULL ) {
+			memoize_sum_of_influences_p = new map<vertex_index_t,float>;
+		}
+		memoize_sum_of_influences_p->clear();
+		bikh_log_odds_update_rule<network_t,params_t,rng_t>::figure_out_update(
+			i, signal, n, params, state);
 	}
 };
 
@@ -424,21 +468,23 @@ public:
 
 	using bikh_log_odds_update_rule<network_t,params_t,rng_t>::rho;
 
-	virtual float sum_of_influences(vector<vertex_index_t>&neighbors, 
+	virtual float sum_of_influences(set<vertex_index_t>&neighbors, 
+			vertex_index_t n0,
 			network_t &n, params_t &params, 
 			state_container_t &state, string indent = "") { 
-		if ( close_level < 0 ) {
+		if ( close_level == (unsigned int)-1 ) {
 			close_level = params.inference_closure_level();
 		}
 		if ( level < close_level ) {
+			//LOG_OUT << indent << "  " << level << " < " << close_level << endl;
 			++level;
 			float soi = bikh_log_odds_update_rule<network_t,params_t,rng_t>::
-				sum_of_influences( neighbors, n, params, state, indent );
+				sum_of_influences( neighbors, n0, n, params, state, indent );
 			--level;
 			return soi;
 		}
 		// count the neighbors
-		typename vector<vertex_index_t>::iterator ji;
+		typename set<vertex_index_t>::iterator ji;
 		unsigned n_decided = 0, n_adopted = 0;
 		for (ji = neighbors.begin(); ji != neighbors.end(); ++ji) {
 		       	vertex_index_t j = *ji;
@@ -450,6 +496,8 @@ public:
 			}
 		}
 		int n_up = n_adopted, n_down = n_decided - n_adopted;
+		LOG_OUT << indent << "closure: " << n_up << " up, "
+			<< n_down << " down: " << (n_up - n_down) * rho << endl;
 		// convert to the log-odds that the outer sum_of_influences
 		// wants: (adoptions - rejections) times rho.
 		return (n_up - n_down) * rho;
