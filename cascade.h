@@ -279,22 +279,23 @@ public:
 		// the neighbors we're given
 		set<vertex_index_t> n1_neighbors;
 		for ( typename set<vertex_index_t>::iterator n1i = neighbors.begin(); n1i != neighbors.end(); ++n1i ) {
+			vertex_index_t n1 = *n1i;
 			// Construct vector of that person's neighbors
 			// (those that are in the set of neighbors we're given)
 		       	n1_neighbors.clear();
-			construct_neighbors_neighbors( *n1i, neighbors, n, n1_neighbors, state, indent + "  " );
+			construct_neighbors_neighbors( n1, neighbors, n, n1_neighbors, state, indent + "  " );
 
 			// Get the sum_of_influences log likelihood for
 			// neighbor's neighbors, recursively.
 			float n1_sum_log_odds = 
-				sum_of_influences(n1_neighbors, *n1i, n, params, state, indent + "  ");
+				sum_of_influences(n1_neighbors, n1, n, params, state, indent + "  ");
 			LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
 
 			// given the neighbor's influences and their actual 
 			// action, there are cases giving us this neighbor's
 			// contribution to the log odds.
 			float log_alpha_n1;
-			int action = (state[*n1i].adopted ? 1 : -1);
+			int action = (state[n1].adopted ? 1 : -1);
 			if (n1_sum_log_odds * action > rho) {
 				// if the influence is enough to override their signal, we don't
 				// know their signal because they were part of a cascade
