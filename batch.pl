@@ -3,7 +3,8 @@ use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use File::Basename;
 
-my $reps = 1000;
+#my $reps = 1000;
+my $reps = 100;
 #my $reps = 1;
 
 my @prange = (0.5,1);
@@ -11,7 +12,7 @@ my $pstep = 0.01;
 #my @nblist = (4,8,12);
 my @nblist = (4,12);
 #my @rulelist = ("counting", "bayesian");
-my @rulelist = ('bayesian-same-neighborhood', 'bayesian-closure', 'bayesian');
+my @rulelist = ('bayesian-closure-2', 'bayesian-closure-3', 'bayesian-closure-4', 'bayesian-closure-10', 'bayesian-same-neighborhood', 'bayesian');
 my @experiments = ("50x50");
 
 if (grep(/^--quick$/,@ARGV))
@@ -44,7 +45,7 @@ elsif (grep(/^--regular$/,@ARGV))
 elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 { $batchname = "lattice-size";
   #@nblist = (1,2,3,4,5,6,7,8,9,10,11,14,17,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300);
-  @nblist = (4,8,12,24,40,48,60,80,120);
+  @nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
   # note there's a special case in the code to skip larger bayesian neighborhoods
   @prange = (0.55, 0.55+$pstep/2);
   #@rulelist = ('counting');
@@ -91,7 +92,7 @@ for my $rule (@rulelist)
   for my $nb (@nblist)
   { my $nr = 0;
     my $metric; 
-    for my $c (1 .. 10)
+    for my $c (1 .. 20)
     { my $tnr = $c*$c + ($c+1)*($c+1) - 1;
       my $inr = (2*$c+1)*(2*$c+1) - 1;
       print STDERR "$tnr, $inr\n";
@@ -120,6 +121,9 @@ for my $rule (@rulelist)
           }
           if (!-e "$tmpout") { mkdir("$tmpout") or die "couldn't mkdir $tmpout"; }
           system("rm -rf $tmpout/*");
+	  if ( $rule =~ /bayesian-closure-(.*)$/ ) {
+		  push @extra_args, "inference_closure_level=$1", "update_rule=bayesian-closure";
+	  }
           my $comm = "$code_dir/bikhitron "
             . " -f $code_dir/settings/$experiment.settings "
             . $batchargs . join("", map {" --$_" } @extra_args)
