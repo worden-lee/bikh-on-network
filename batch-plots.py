@@ -67,12 +67,19 @@ def make_plots(csv_file):
 	def mean(list):
 		return sum(list) / len(list)
 	rows = zip(cols['p'],cols['neighbors'], cols['population size'],
-			cols['update rule'],cols['proportion adopting'],
+			cols['update rule'], cols['inference closure rule'],
+			cols['proportion adopting'],
 			cols['last action'])
 	rows.sort(key=lambda row: row[0]) # sort by p
 	rows.sort(key=lambda row: row[2]) # then by lattice size
 	rows.sort(key=lambda row: row[3]) # then by update rule
+	rows.sort(key=lambda row: row[4]) # then by closure level (applicable to 'bayesian-closure' rule only)
 	rows.sort(key=lambda row: row[1]) # then by neighborhood size
+	def extended_rule_name(rule, level):
+		if ( rule == 'bayesian-closure' ):
+			return '%s-%s' % (rule, level)
+		return rule;
+	rows = [ (p, n, s, extended_rule_name(r,l), pa, la) for (p, n, s, r, l, pa, la) in rows ]
 	mean_plots = []
 	prob_plots = []
 	last_plots = []
