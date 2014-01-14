@@ -5,7 +5,6 @@ use File::Basename;
 
 #my $reps = 1000;
 my $reps = 100;
-#my $reps = 1;
 
 my @prange = (0.5,1);
 my $pstep = 0.01;
@@ -53,6 +52,13 @@ elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
   { @experiments = ("100x100"); 
     $batchname = 'lattice-size-100';
   }
+}
+elsif (grep(/^--test$/,@ARGV))
+{ $batchname = 'test';
+  @nblist = (4, 8);
+  @prange = (0.55, 0.55+$pstep/2);
+  @rulelist = ('bayesian-closure-2', 'bayesian-closure-3');
+  $reps = 1;
 }
 else # if (grep(/^--lattice$/,@ARGV))
 { $batchname = "lattice";

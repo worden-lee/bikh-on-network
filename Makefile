@@ -64,6 +64,9 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 
 # batch simulations
 
+test-batch/batch.csv test-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --test
+
 lattice-batch/batch.csv lattice-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --lattice
 
