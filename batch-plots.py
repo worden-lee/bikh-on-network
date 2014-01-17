@@ -78,6 +78,12 @@ def make_plots(csv_file):
 	def extended_rule_name(rule, level):
 		if ( rule == 'bayesian-closure' ):
 			return '%s-%s' % (rule, int(level))
+		if ( rule == 'bayesian' ):
+			return 'Full Bayesian Inference';
+		if ( rule == 'bayesian-same-neighborhood' ):
+			return 'Bayesian Inference';
+		if ( rule == 'counting' ):
+			return 'Counting';
 		return rule;
 	rows = [ (p, n, s, extended_rule_name(r,l), pa, la) for (p, n, s, r, l, pa, la) in rows ]
 	mean_plots = []
