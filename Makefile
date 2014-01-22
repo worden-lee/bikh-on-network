@@ -97,7 +97,10 @@ figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : $(BIKHDIR)
 %/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
-batch-data %-batch :
+batch-data :
+	mkdir $@
+
+%-batch :
 	mkdir $@
 
 .PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch regular-size-batch lattice-batch/batch.csv regular-batch/summaries.csv regular-size-batch/summaries.csv regular-size-100-batch/summaries.csv
