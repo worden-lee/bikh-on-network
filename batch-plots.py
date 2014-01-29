@@ -12,7 +12,7 @@ from itertools import groupby
 
 ### Packages which are necessary to create a movie
  
-#import subprocess                 # For issuing commands to the OS.
+#import subprocess                # For issuing commands to the OS.
 import os, fnmatch
 import sys
 
