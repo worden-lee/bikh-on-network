@@ -56,7 +56,8 @@ elsif (grep(/^--lattice-size$/,@ARGV) or grep(/^--lattice-size-100$/,@ARGV))
 elsif (grep(/--figure1/,@ARGV)) # :)
 { $batchname = 'figure1-lattice';
   @nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
-  # note there's a special case in the code to skip larger bayesian neighborhoods
+  # note there's a special case in the code to skip larger 
+  # bayesian neighborhoods
   @rulelist = ('bayesian', 'bayesian-same-neighborhood');
   @prange = (0.55, 0.55+$pstep/2);
   @experiments = ('100x100');
