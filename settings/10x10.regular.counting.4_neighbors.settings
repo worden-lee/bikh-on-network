@@ -1,0 +1,4 @@
+include 10x10.settings
+include 4_neighbors.settings
+update_rule counting
+include regular.settings
