@@ -9,10 +9,6 @@ import csv
 from itertools import groupby
 
 # import numpy as np
-
-### Packages which are necessary to create a movie
- 
-#import subprocess                # For issuing commands to the OS.
 import os, fnmatch
 import sys
 
@@ -24,20 +20,7 @@ filenameslist.sort()
 
 #print filenameslist
 
-# https://en.wikipedia.org/wiki/Binomial_coefficient#Binomial_coefficient_in_programming_languages
-# it's no use, too big.
-def binomial(n, k):
-    if k < 0 or k > n:
-        return 0
-    if k > n - k: # take advantage of symmetry
-        k = n - k
-    c = 1
-    for i in range(k):
-        c = c * (n - (k - (i+1)))
-        c = c // (i+1)
-    return c
-
-# use this instead.
+# regular binomial fails on big numbers, use this instead.
 # http://www.biostars.org/post/show/9659/the-problem-with-converting-long-int-to-float-in-python/
 from math import log, exp
 from gamma import log_gamma
@@ -66,10 +49,15 @@ def make_plots(csv_file):
 
 	def mean(list):
 		return sum(list) / len(list)
-	rows = zip(cols['p'],cols['neighbors'], cols['population size'],
-			cols['update rule'], cols['inference closure level'],
-			cols['proportion adopting'],
-			cols['last action'])
+	colnames = ['p', 'neighbors', 'population size', 'update rule',
+		'inference closure level', 'proportion adopting',
+		'last action']
+
+	#rows = zip(cols['p'],cols['neighbors'], cols['population size'],
+	#		cols['update rule'], cols['inference closure level'],
+	#		cols['proportion adopting'],
+	#		cols['last action'])
+	rows = zip( *[cols[n] for n in colnames] )
 	rows.sort(key=lambda row: row[0]) # sort by p
 	rows.sort(key=lambda row: row[2]) # then by lattice size
 	rows.sort(key=lambda row: row[3]) # then by update rule
@@ -89,11 +77,18 @@ def make_plots(csv_file):
 	mean_plots = []
 	prob_plots = []
 	last_plots = []
+	count_csvfilename = csv_file.rstrip("csv") + "frequencies.csv"
+	print count_csvfilename
+	count_csvfile = open( count_csvfilename, 'wb' )
+	count_csvwriter = csv.writer( count_csvfile)
+	count_csvwriter.writerow( [ 'p', 'neighborhood size', 'population size', 'rule', 'frequency' ] )
 	for nb, rows_nb in groupby(rows, lambda row: row[1]):
 		for r, rows_r in groupby(rows_nb, lambda row: row[3]):
 			for n, rows_n in groupby(rows_r, lambda row: row[2]):
 				p_pairs = [(p,[row for row in p_rows])
 						for p, p_rows in groupby(rows_n, lambda row: row[0])]
+				for p, p_rows in p_pairs:
+					count_csvwriter.writerow( [ p, nb, n, r, len(p_rows) ] )
 				mean_pairs = ((p,mean([row[4] for row in p_rows]))
 					for p, p_rows in p_pairs)
 				pr = zip(*(sorted(mean_pairs, key = lambda pair: pair[0])))

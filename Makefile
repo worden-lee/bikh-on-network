@@ -94,7 +94,7 @@ figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : $(BIKHDIR)
 figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --figure1-regular
 
-%/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png : %/summaries.csv $(BIKHDIR)/batch-plots.py
+%/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png %/summaries.frequencies.csv : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
 
 batch-data :
