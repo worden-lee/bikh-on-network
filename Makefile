@@ -1,5 +1,5 @@
 # directories to link with
-NETWERK ?= ../../netwerk
+NETWERK ?= ../worden-lee_net-dyn
 NETDYNDIR ?= $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
 ESTRDIR ?= $(NETWERK)/libexecstream
@@ -88,11 +88,21 @@ lattice-size-100-batch/batch.csv lattice-size-100-batch/summaries.csv : $(BIKHDI
 regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --batchname regular-size-100
 
-figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --batchname figure1-lattice
+# Cascades paper batches we do differently: in parallel
 
-figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --batchname figure1-regular
+figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : /proc/uptime
+	(head -n 1 figure1-lattice-batch/1/batch.csv && tail -n +2 -q figure1-lattice-batch/*/batch.csv) > figure1-lattice-batch/batch.csv
+	(head -n 1 figure1-lattice-batch/1/summaries.csv && tail -n +2 -q figure1-lattice-batch/*/summaries.csv) > figure1-lattice-batch/summaries.csv
+
+figure1-lattice-batch/%/batch.csv figure1-lattice-batch/%/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --batchname figure1-lattice --batchnumber $*
+
+figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : /proc/uptime
+	(head -n 1 figure1-regular-batch/1/batch.csv && tail -n +2 -q figure1-regular-batch/*/batch.csv) > figure1-regular-batch/batch.csv
+	(head -n 1 figure1-regular-batch/1/summaries.csv && tail -n +2 -q figure1-regular-batch/*/summaries.csv) > figure1-regular-batch/summaries.csv
+
+figure1-regular-batch/%/batch.csv figure1-regular-batch/%/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --batchname figure1-regular --batchnumber $*
 
 %/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png %/summaries.frequencies.csv : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
@@ -103,7 +113,11 @@ batch-data :
 %-batch :
 	mkdir $@
 
-.PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch regular-size-batch lattice-batch/batch.csv regular-batch/summaries.csv regular-size-batch/summaries.csv regular-size-100-batch/summaries.csv
+.PRECIOUS: lattice-batch lattice-batch/batch.csv lattice-batch/summaries.csv regular-batch regular-size-batch lattice-batch/batch.csv regular-batch/summaries.csv regular-size-batch/summaries.csv regular-size-100-batch/summaries.csv figure1-regular-batch figure1-regular-batch/summaries.csv figure1-lattice-batch figure1-lattice-batch/summaries.csv
+
+.PRECIOUS: figure1-lattice-batch/1 figure1-lattice-batch/2 figure1-lattice-batch/3 figure1-lattice-batch/4 figure1-lattice-batch/5 figure1-lattice-batch/6 figure1-lattice-batch/1/summaries.csv figure1-lattice-batch/2/summaries.csv figure1-lattice-batch/3/summaries.csv figure1-lattice-batch/4/summaries.csv figure1-lattice-batch/5/summaries.csv figure1-lattice-batch/6/summaries.csv
+
+.PRECIOUS: figure1-regular-batch/1 figure1-regular-batch/2 figure1-regular-batch/3 figure1-regular-batch/4 figure1-regular-batch/5 figure1-regular-batch/6 figure1-regular-batch/1/summaries.csv figure1-regular-batch/2/summaries.csv figure1-regular-batch/3/summaries.csv figure1-regular-batch/4/summaries.csv figure1-regular-batch/5/summaries.csv figure1-regular-batch/6/summaries.csv
 
 # fancy GNU-style line for tracking header dependencies in .P files
 %.o : %.c++
