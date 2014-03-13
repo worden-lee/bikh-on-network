@@ -65,34 +65,34 @@ $(BIKHDIR)/bikhitron : $(SIMOBJS) $(NETDYNLIB)
 # batch simulations
 
 test-batch/batch.csv test-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --test
+	$(BIKHDIR)/batch.pl --batchname test
 
 lattice-batch/batch.csv lattice-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --lattice
+	$(BIKHDIR)/batch.pl --batchname lattice
 
 #lattice-batch/summaries.csv : lattice-batch/batch.csv
 #	sed -n -e 1p -e /^0/p `find lattice-batch -name summary.csv` > $@
 
 regular-batch/batch.csv regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --regular
+	$(BIKHDIR)/batch.pl --batchname regular
 
 lattice-size-batch/batch.csv lattice-size-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --lattice-size
+	$(BIKHDIR)/batch.pl --batchname lattice-size
 
 regular-size-batch/batch.csv regular-size-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --regular-size
+	$(BIKHDIR)/batch.pl --batchname regular-size
 
 lattice-size-100-batch/batch.csv lattice-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --lattice-size-100
+	$(BIKHDIR)/batch.pl --batchname lattice-size-100
 
 regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --regular-size-100
+	$(BIKHDIR)/batch.pl --batchname regular-size-100
 
 figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --figure1-lattice
+	$(BIKHDIR)/batch.pl --batchname figure1-lattice
 
 figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
-	$(BIKHDIR)/batch.pl --figure1-regular
+	$(BIKHDIR)/batch.pl --batchname figure1-regular
 
 %/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png %/summaries.frequencies.csv : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
