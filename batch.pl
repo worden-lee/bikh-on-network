@@ -76,7 +76,7 @@ elsif ($batchname eq 'figure1-lattice' or $batchname eq 'figure1-regular')
   @rulelist = ('bayesian', 'bayesian-same-neighborhood');
   @prange = (0.55, 0.55+$pstep/2);
   @experiments = ('100x100');
-  if (grep(/--figure1-regular$/,@ARGV))
+  if ($batchname eq 'figure1-regular')
   { $batchargs = ' -f regular.settings';
     $lattice = 0;
   }
