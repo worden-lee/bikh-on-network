@@ -65,7 +65,7 @@ elsif ($batchname eq 'lattice-size' or $batchname eq 'lattice-size-100')
   # note there's a special case in the code to skip larger bayesian neighborhoods
   @prange = (0.55, 0.55+$pstep/2);
   #@rulelist = ('counting');
-  if ($batch eq 'lattice-size-100')
+  if ($batchname eq 'lattice-size-100')
   { @experiments = ("100x100"); 
   }
 }
