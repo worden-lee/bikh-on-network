@@ -91,18 +91,25 @@ regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDI
 # Cascades paper batches we do differently: in parallel
 
 figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : /proc/uptime
-	(head -n 1 figure1-lattice-batch/1/batch.csv && tail -n +2 -q figure1-lattice-batch/*/batch.csv) > figure1-lattice-batch/batch.csv
+	-(head -n 1 figure1-lattice-batch/1/batch.csv && tail -n +2 -q figure1-lattice-batch/*/batch.csv) > figure1-lattice-batch/batch.csv
 	(head -n 1 figure1-lattice-batch/1/summaries.csv && tail -n +2 -q figure1-lattice-batch/*/summaries.csv) > figure1-lattice-batch/summaries.csv
 
 figure1-lattice-batch/%/batch.csv figure1-lattice-batch/%/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --batchname figure1-lattice --batchnumber $*
 
 figure1-regular-batch/batch.csv figure1-regular-batch/summaries.csv : /proc/uptime
-	(head -n 1 figure1-regular-batch/1/batch.csv && tail -n +2 -q figure1-regular-batch/*/batch.csv) > figure1-regular-batch/batch.csv
+	-(head -n 1 figure1-regular-batch/1/batch.csv && tail -n +2 -q figure1-regular-batch/*/batch.csv) > figure1-regular-batch/batch.csv
 	(head -n 1 figure1-regular-batch/1/summaries.csv && tail -n +2 -q figure1-regular-batch/*/summaries.csv) > figure1-regular-batch/summaries.csv
 
 figure1-regular-batch/%/batch.csv figure1-regular-batch/%/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
 	$(BIKHDIR)/batch.pl --batchname figure1-regular --batchnumber $*
+
+compare-bayesian-batch/batch.csv compare-bayesian-batch/summaries.csv : /proc/uptime
+	-(head -n 1 compare-bayesian-batch/1/batch.csv && tail -n +2 -q compare-bayesian-batch/*/batch.csv) > compare-bayesian-batch/batch.csv
+	(head -n 1 compare-bayesian-batch/1/summaries.csv && tail -n +2 -q compare-bayesian-batch/*/summaries.csv) > compare-bayesian-batch/summaries.csv
+
+compare-bayesian-batch/%/batch.csv compare-bayesian-batch/%/summaries.csv : $(BIKHDIR)/batch.pl $(BIKHDIR)/bikhitron
+	$(BIKHDIR)/batch.pl --batchname compare-bayesian --batchnumber $*
 
 %/summaries.mean.png %/summaries.probability.png %/summaries.last.png %/summaries.size-last.png %/summaries.size-mean.png %/summaries.size-probability.png %/summaries.frequencies.csv : %/summaries.csv $(BIKHDIR)/batch-plots.py
 	python $(BIKHDIR)/batch-plots.py $<
