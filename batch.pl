@@ -30,8 +30,9 @@ my $batchnumber = undef;
 my $lattice = 1;
 
 use Getopt::Long;
-GetOptions( "batchname=s"   => \$batchname,
-	"batchnumber=i" => \$batchnumber,
+GetOptions(
+	'batchname=s'   => \$batchname,
+	'batchnumber=i' => \$batchnumber,
 	'quick'         => \$quick,
         'keep'          => \$keep
 );
@@ -70,10 +71,12 @@ elsif ($batchname eq 'lattice-size' or $batchname eq 'lattice-size-100')
   }
 }
 elsif ($batchname eq 'figure1-lattice' or $batchname eq 'figure1-regular')
-{ @nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
+{ #@nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
+  # python -c 'print [ (2*n + 1)*(2*n + 1) - 1 for n in range(20) ]'
+  @nblist = ( 8, 24, 48, 80, 120, 168, 224, 288, 360, 440, 528, 624, 728, 840, 960, 1088, 1224, 1368, 1520 );
   # note there's a special case in the code to skip larger 
   # bayesian neighborhoods
-  @rulelist = ('bayesian', 'bayesian-same-neighborhood');
+  @rulelist = ('bayesian-same-neighborhood'); #, 'bayesian'); 
   @prange = (0.55, 0.55+$pstep/2);
   @experiments = ('100x100');
   if ($batchname eq 'figure1-regular')
