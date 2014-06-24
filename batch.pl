@@ -85,10 +85,12 @@ elsif ($batchname eq 'figure1-lattice' or $batchname eq 'figure1-regular')
   }
 }
 elsif ($batchname eq 'test')
-{ @nblist = (4, 8);
-  #@nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
+{ #@nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
+  @nblist = ( 8, 24, 48, 80, 120, 168 ); #, 224, 288, 360, 440, 528, 624, 728, 840, 960, 1088, 1224, 1368, 1520 );
   @prange = (0.55, 0.55+$pstep/2);
-  @rulelist = ('bayesian', 'bayesian-closure-2');
+  @rulelist = ('bayesian-same-neighborhood');#,'bayesian', 'bayesian-closure-2','bayesian-closure-3', 'bayesian-closure-1');
+  $batchargs = ' -f regular.settings';
+  $lattice = 0;
   $reps = 1;
 }
 elsif ($batchname eq 'lattice')
@@ -101,6 +103,8 @@ else
 
 my @plist =
  map { $_ * $pstep } (($prange[0]/$pstep) .. ($prange[1]/$pstep));
+
+#print 'prange: ' , @prange , ' plist: ' , @plist;
 
 my $pwd = `pwd`;
 chomp($pwd);

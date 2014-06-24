@@ -11,6 +11,8 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <math.h>
+#include <sys/time.h>
+#include <stdio.h>
 #include "networks.h"
 #include "cascade.h"
 
@@ -29,6 +31,7 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		params_t &parameters) {
 	// ===== do the work =====
 
+	/*
 	CSVDisplay nodes_csv(parameters.outputDirectory()+"/degrees.csv");
 	nodes_csv << "vertex" << "in degree" << "out degree";
 	nodes_csv.newRow();
@@ -52,6 +55,10 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 			network_csv << nbrs.str() << endl;
 		}
 	}
+	*/
+	struct timeval before_time, after_time;
+	if ( gettimeofday( &before_time, NULL ) )
+		perror( "gettimeofday" );
 
 	CSVDisplay timeseries_csv(parameters.outputDirectory()+"/measurements.csv");
 	timeseries_csv << "t" << "n_adopting" << "proportion_adopting";
@@ -104,11 +111,15 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		cascade_dynamics.step();
 	}
 
+	if ( gettimeofday( &after_time, NULL ) )
+		perror( "gettimeofday" );
+
 	CSVDisplay summary_csv(parameters.outputDirectory()+"/summary.csv");
 	summary_csv << "random seed" << "p" << "neighbors" << "update rule" 
 		<< "inference closure level"
 		<< "population size" << "proportion adopting" << "proportion cascading" 
-		<< "last action" << endl;
+		<< "last action" << "running time" << "inferences" << "memoizes" << endl;
+	extern int n_inferences, n_memoized;
 	summary_csv << fstring("%.3ld",parameters.randSeed()) 
 		<< parameters.p() << parameters.n_neighbors() 
 		<< parameters.update_rule()
@@ -118,6 +129,10 @@ void do_cascade(network_t &n, cascade_dynamics_t &cascade_dynamics,
 		<< (cascade_dynamics.state().n_cascading() /
 			 (double)cascade_dynamics.state().n_decided())
 		<< cascade_dynamics.state()[cascade_dynamics.already_updated.back()].adopted
+		<< ((after_time.tv_sec + after_time.tv_usec / 1000000.0)
+			- (before_time.tv_sec + before_time.tv_usec / 1000000.0))
+		<< n_inferences
+		<< n_memoized
 		<< endl;
 }
 

@@ -181,6 +181,8 @@ boost::iostreams::stream< boost::iostreams::null_sink > null_ostream( ( boost::i
 #define LOG_OUT null_ostream
 #endif
 
+int n_inferences, n_memoized;
+
 // This is the Bikhchandani et al model, extended to consider
 // possibly-local interactions.
 // Each player uses Bayesian inference to infer likelihood that the true
@@ -267,29 +269,38 @@ public:
 		// in order, try to infer their signal from what they were looking at
 		float total_log_odds = 0;
 
-                // if we're in a complete graph, we can cache results and not recompute them,
-                // just based on the number who have played so far
 		if (memoize_sum_of_influences_p && memoize_sum_of_influences_p->count(n0) > 0) {
 			float lookup = (*memoize_sum_of_influences_p)[n0];
 			LOG_OUT << indent << "  sum_of_influences(" << n0 << ") memoized: " << lookup << endl;
+			++n_memoized;
 			return lookup;
 		}
+		++n_inferences;
 
 		// Now compute the log odds likelihood thing for each of
 		// the neighbors we're given
 		set<vertex_index_t> n1_neighbors;
 		for ( typename set<vertex_index_t>::iterator n1i = neighbors.begin(); n1i != neighbors.end(); ++n1i ) {
 			vertex_index_t n1 = *n1i;
-			// Construct vector of that person's neighbors
-			// (those that are in the set of neighbors we're given)
-		       	n1_neighbors.clear();
-			construct_neighbors_neighbors( n1, neighbors, n, n1_neighbors, state, indent + "  " );
+			float n1_sum_log_odds;
 
-			// Get the sum_of_influences log likelihood for
-			// neighbor's neighbors, recursively.
-			float n1_sum_log_odds = 
-				sum_of_influences(n1_neighbors, n1, n, params, state, indent + "  ");
-			LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
+		        if (memoize_sum_of_influences_p && memoize_sum_of_influences_p->count(n1) > 0) {
+			        float lookup = (*memoize_sum_of_influences_p)[n1];
+			        LOG_OUT << indent << "  sum_of_influences(" << n1 << ") memoized: " << lookup << endl;
+			        n1_sum_log_odds = lookup;
+			        ++n_memoized;
+		        } else {
+				LOG_OUT << indent << "  sum_of_influences(" << n1 << ") not memoized" << endl;
+			        // Construct vector of that person's neighbors
+				// (those that are in the set of neighbors we're given)
+				n1_neighbors.clear();
+				construct_neighbors_neighbors( n1, neighbors, n, n1_neighbors, state, indent + "  " );
+
+				// Get the sum_of_influences log likelihood for
+				// neighbor's neighbors, recursively.
+				n1_sum_log_odds = sum_of_influences(n1_neighbors, n1, n, params, state, indent + "  ");
+				LOG_OUT << indent << "    sum of log_odds: " << n1_sum_log_odds << "\n";
+			}
 
 			// given the neighbor's influences and their actual 
 			// action, there are cases giving us this neighbor's
@@ -309,7 +320,7 @@ public:
 				// this includes the "paradoxical" case.
 				log_alpha_n1 = action * rho;
 			}
-			LOG_OUT << indent << "  log alpha (" << n1 << "): " << log_alpha_n1 << "\n";
+			LOG_OUT << indent << "    log alpha (" << n1 << "): " << log_alpha_n1 << "\n";
 			// We simply add that to the total log odds.
 			total_log_odds += log_alpha_n1;
 		}
@@ -436,6 +447,7 @@ public:
 
 	virtual void figure_out_update(vertex_index_t i, bool signal,
 		network_t &n, params_t &params, state_container_t &state) { 
+		LOG_OUT << "figure_out_update(" << i << ")" << endl;
 		if ( memoize_sum_of_influences_p == NULL ) {
 			memoize_sum_of_influences_p = new map<vertex_index_t,float>;
 		}
