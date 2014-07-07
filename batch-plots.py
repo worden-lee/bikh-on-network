@@ -202,9 +202,10 @@ def make_plots(csv_file):
 			ymax = max(ymax, *n_z[1])
 	if ymax > 0.7 :
 		plt.ylim(ymax=1.01)
-	plt.suptitle("%g players, p=0.55"%n)
-	plt.ylabel("density of adoption")
-	plt.xlabel("neighbourhood size")
+	#plt.suptitle("%g players, p=0.55"%n)
+	#plt.ylabel("density of adoption")
+        plt.suptitle( "Density of adoption" )
+	plt.xlabel("Neighborhood size")
 	plt.legend(loc="upper right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.18)
 	fig.savefig(summaries_filename);
@@ -225,9 +226,10 @@ def make_plots(csv_file):
 			ymin = min(ymin, n_z[1])
 	#plt.plot( pr[0], pr[0], 'k,' )
 	plt.ylim(ymax=1.01)
-	plt.suptitle("%g players, p=0.55"%n)
-	plt.ylabel("probability of majority adoption")
-	plt.xlabel("neighbourhood size")
+	#plt.suptitle("%g players, p=0.55"%n)
+	#plt.ylabel("probability of majority adoption")
+        plt.suptitle( "Probability of majority adoption" )
+	plt.xlabel("Neighborhood size")
 	if ymin < 0.95 :
 		plt.legend(loc="upper right", prop={"size":8})
 	else :
