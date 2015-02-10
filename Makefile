@@ -23,7 +23,7 @@ over: clean default
 NETDYNLIB = $(NETDYNDIR)/libnet-dyn.a
 
 $(NETDYNLIB) : /proc/uptime
-	$(MAKE) -C $(NETDYNDIR)
+	$(MAKE) -C $(NETDYNDIR) $(subst $(NETDYNDIR),,$(NETDYNLIB))
 
 $(ESTRDIR)/exec-stream.o : $(ESTRDIR)/exec-stream.cpp $(ESTRDIR)/exec-stream.h
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
@@ -90,7 +90,7 @@ regular-size-100-batch/batch.csv regular-size-100-batch/summaries.csv : $(BIKHDI
 
 # Cascades paper batches we do differently: in parallel
 
-figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : /proc/uptime
+figure1-lattice-batch/batch.csv figure1-lattice-batch/summaries.csv : # /proc/uptime
 	-(head -n 1 figure1-lattice-batch/1/batch.csv && tail -n +2 -q figure1-lattice-batch/*/batch.csv) > figure1-lattice-batch/batch.csv
 	(head -n 1 figure1-lattice-batch/1/summaries.csv && tail -n +2 -q figure1-lattice-batch/*/summaries.csv) > figure1-lattice-batch/summaries.csv
 

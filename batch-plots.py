@@ -189,7 +189,7 @@ def make_plots(csv_file):
 	summaries_filename = csv_file.rstrip("csv") + "size-mean.png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
-	plt.subplot(111)
+	spl = plt.subplot(111)
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
 	ymax = 0
@@ -206,14 +206,16 @@ def make_plots(csv_file):
 	#plt.ylabel("density of adoption")
         plt.suptitle( "Density of adoption" )
 	plt.xlabel("Neighborhood size")
-	plt.legend(loc="upper right", prop={"size":8})
+	#plt.legend(loc="upper right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.18)
+        # ad hoc: too many ticks for figure
+        spl.set_xticks( spl.get_xticks()[::2] )
 	fig.savefig(summaries_filename);
 
 	summaries_filename = csv_file.rstrip("csv") + "size-probability.png"
 	print summaries_filename
 	fig = plt.figure(figsize=(4,4))
-	plt.subplot(111)
+	spl = plt.subplot(111)
 	size_data.sort(key=lambda row: row[2]) # sort by n
 	size_data.sort(key=lambda row: row[1]) # sort by r
 	ymin = 1
@@ -231,11 +233,13 @@ def make_plots(csv_file):
         plt.suptitle( "Probability of majority adoption" )
 	plt.xlabel("Neighborhood size")
 	if ymin < 0.95 :
-		plt.legend(loc="upper right", prop={"size":8})
+		pass #plt.legend(loc="upper right", prop={"size":8})
 	else :
 		plt.ylim(ymin=0.5)
-		plt.legend(loc="lower right", prop={"size":8})
+		#plt.legend(loc="lower right", prop={"size":8})
 	plt.subplots_adjust(bottom=.10,left=.18)
+        # ad hoc: too many ticks for figure
+        spl.set_xticks( spl.get_xticks()[::2] )
 	fig.savefig(summaries_filename);
 
 for csv_file in filenameslist:
