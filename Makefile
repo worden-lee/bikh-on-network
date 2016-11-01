@@ -1,12 +1,11 @@
 # directories to link with
-NETWERK = ../worden-lee_net-dyn
-NETDYNDIR = $(NETWERK)/net-dyn-lib
-VXLDIR ?= $(NETWERK)/vxl
+NETDYN ?= ../worden-lee_net-dyn
+NETDYNDIR = $(NETDYN)/net-dyn-lib
+VXLDIR ?= $(NETDYN)/vxl
 $(warning NETDYN $(NETDYN))
-$(warning NETWERK $(NETWERK))
-$(warning realpath NETWERK $(realpath $(NETWERK)))
+$(warning realpath NETDYN $(realpath $(NETDYN)))
 $(warning in .. $(shell ls ..))
-ESTRDIR = $(realpath $(NETWERK)/libexecstream)
+ESTRDIR = $(realpath $(NETDYN)/libexecstream)
 $(warning ESTRDIR $(ESTRDIR))
 # this directory
 BIKHDIR ?= .
