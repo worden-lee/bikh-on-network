@@ -2,11 +2,7 @@
 NETDYN ?= ../worden-lee_net-dyn
 NETDYNDIR = $(NETDYN)/net-dyn-lib
 VXLDIR ?= $(NETDYN)/vxl
-$(warning NETDYN $(NETDYN))
-$(warning realpath NETDYN $(realpath $(NETDYN)))
-$(warning in .. $(shell ls ..))
 ESTRDIR = $(realpath $(NETDYN)/libexecstream)
-$(warning ESTRDIR $(ESTRDIR))
 # this directory
 BIKHDIR ?= .
 # add -pg for profiling
