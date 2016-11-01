@@ -2,8 +2,10 @@
 NETWERK = ../worden-lee_net-dyn
 NETDYNDIR = $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
+$(warning NETDYN $(NETDYN))
 $(warning NETWERK $(NETWERK))
 $(warning realpath NETWERK $(realpath $(NETWERK)))
+$(warning in .. $(shell ls ..))
 ESTRDIR = $(realpath $(NETWERK)/libexecstream)
 $(warning ESTRDIR $(ESTRDIR))
 # this directory
