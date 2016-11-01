@@ -12,7 +12,7 @@ my $batchname = 'lattice';
 # if batch name is set in argv, it will customize these values
 
 #my $reps = 1000;
-my $reps = 100;
+my $reps = 1;
 
 my @prange = (0.5,1);
 my $pstep = 0.01;
@@ -74,6 +74,8 @@ elsif ($batchname eq 'figure1-lattice' or $batchname eq 'figure1-regular')
 { #@nblist = (4,8,12,24,40,48,60,80,84,120,112,144,168,180,220,224,288,360,440);
   # python -c 'print [ (2*n + 1)*(2*n + 1) - 1 for n in range(20) ]'
   @nblist = ( 8, 24, 48, 80, 120, 168, 224, 288, 360, 440, 528, 624, 728, 840, 960, 1088, 1224, 1368, 1520 );
+  # temporary: make up inbetween sizes
+  @nblist = ( 4, 12, 40, 60, 84, 112, 144, 180, 180, 220 );
   # note there's a special case in the code to skip larger 
   # bayesian neighborhoods
   @rulelist = ('bayesian-same-neighborhood'); #, 'bayesian'); 
