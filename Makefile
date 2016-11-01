@@ -4,6 +4,7 @@ NETDYNDIR = $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
 ESTRDIR = $(realpath $(NETWERK)/libexecstream)
 $(warning ESTRDIR $(ESTRDIR))
+$(warning $(shell ls $(ESTRDIR)))
 # this directory
 BIKHDIR ?= .
 # add -pg for profiling
