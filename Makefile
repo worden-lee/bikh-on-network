@@ -3,6 +3,7 @@ NETWERK = ../worden-lee_net-dyn
 NETDYNDIR = $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
 ESTRDIR = $(realpath $(NETWERK)/libexecstream)
+$(warning ESTRDIR $(ESTRDIR))
 # this directory
 BIKHDIR ?= .
 # add -pg for profiling
