@@ -1,8 +1,8 @@
 # directories to link with
-NETWERK ?= ../worden-lee_net-dyn
-NETDYNDIR ?= $(NETWERK)/net-dyn-lib
+NETWERK = ../worden-lee_net-dyn
+NETDYNDIR = $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
-ESTRDIR ?= $(NETWERK)/libexecstream
+ESTRDIR = $(realpath $(NETWERK)/libexecstream)
 # this directory
 BIKHDIR ?= .
 # add -pg for profiling
@@ -23,7 +23,7 @@ over: clean default
 NETDYNLIB = $(NETDYNDIR)/libnet-dyn.a
 
 $(NETDYNLIB) : /proc/uptime
-	$(MAKE) -C $(NETDYNDIR) $(subst $(NETDYNDIR),,$(NETDYNLIB))
+	$(MAKE) -C $(NETDYNDIR) $(subst $(NETDYNDIR)/,,$(NETDYNLIB))
 
 $(ESTRDIR)/exec-stream.o : $(ESTRDIR)/exec-stream.cpp $(ESTRDIR)/exec-stream.h
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
