@@ -3,6 +3,7 @@ NETWERK = ../worden-lee_net-dyn
 NETDYNDIR = $(NETWERK)/net-dyn-lib
 VXLDIR ?= $(NETWERK)/vxl
 $(warning NETWERK $(NETWERK))
+$(warning realpath NETWERK $(realpath $(NETWERK)))
 ESTRDIR = $(realpath $(NETWERK)/libexecstream)
 $(warning ESTRDIR $(ESTRDIR))
 # this directory
