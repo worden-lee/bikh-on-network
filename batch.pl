@@ -12,7 +12,7 @@ my $batchname = 'lattice';
 # if batch name is set in argv, it will customize these values
 
 #my $reps = 1000;
-my $reps = 120;
+my $reps = 320 / 4;
 
 my @prange = (0.5,1);
 my $pstep = 0.01;
